@@ -31,11 +31,65 @@ HEADERS = {
 }
 
 # ==========================================
-# 1. FETCH LIVE MARKET DATA & MACRO INDICATORS
+# 1. HISTORICAL BACKFILL & LIVE MARKET DATA
 # ==========================================
 
+def fetch_yahoo_history(ticker, range_str="1y", interval="1d"):
+    """Fetches historical price series from Yahoo Finance."""
+    url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker}?range={range_str}&interval={interval}"
+    try:
+        res = requests.get(url, headers=HEADERS, timeout=10)
+        if res.status_code == 200:
+            data = res.json()
+            result = data['chart']['result'][0]
+            timestamps = result['timestamp']
+            closes = result['indicators']['quote'][0]['close']
+            
+            history = []
+            for ts, close in zip(timestamps, closes):
+                if close is not None:
+                    dt = datetime.fromtimestamp(ts, tz=timezone.utc).isoformat()
+                    history.append({"timestamp": dt, "price": float(close)})
+            return history
+    except Exception as e:
+        print(f"Failed to fetch historical series for {ticker}: {e}")
+    return []
+
+def bootstrap_1year_history():
+    """Initializes gold_price_history.json with 1 year of daily historical data if empty/new."""
+    print("Fetching 1 year of daily historical market data...")
+    gold_hist = fetch_yahoo_history("GC=F", range_str="1y", interval="1d")
+    dxy_hist = fetch_yahoo_history("DX-Y.NYB", range_str="1y", interval="1d")
+    tnx_hist = fetch_yahoo_history("^TNX", range_str="1y", interval="1d")
+
+    if not gold_hist:
+        return []
+
+    # Map DXY and US10Y by date string key (YYYY-MM-DD)
+    dxy_map = {item['timestamp'][:10]: item['price'] for item in dxy_hist}
+    tnx_map = {item['timestamp'][:10]: item['price'] for item in tnx_hist}
+
+    combined_history = []
+    last_dxy, last_tnx = 104.0, 4.20
+
+    for item in gold_hist:
+        date_key = item['timestamp'][:10]
+        if date_key in dxy_map:
+            last_dxy = dxy_map[date_key]
+        if date_key in tnx_map:
+            last_tnx = tnx_map[date_key]
+
+        combined_history.append({
+            "timestamp": item['timestamp'],
+            "price": item['price'],
+            "dxy": last_dxy,
+            "us10y": last_tnx
+        })
+
+    return combined_history
+
 def fetch_yahoo_price(ticker):
-    """Generic helper to fetch regular market price from Yahoo Finance chart endpoint."""
+    """Fetch current live price."""
     url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker}?interval=1m&range=1d"
     try:
         res = requests.get(url, headers=HEADERS, timeout=10)
@@ -45,16 +99,15 @@ def fetch_yahoo_price(ticker):
             if price is not None:
                 return float(price)
     except Exception as e:
-        print(f"Failed to fetch {ticker}: {e}")
+        print(f"Failed to fetch current price for {ticker}: {e}")
     return None
 
 def fetch_market_data():
-    """Fetches Gold, DXY (Dollar Index), and US 10-Year Bond Yield (^TNX)."""
+    """Fetches live Gold, DXY, and US 10-Year Bond Yield."""
     gold_price = fetch_yahoo_price("GC=F")
     dxy = fetch_yahoo_price("DX-Y.NYB") or fetch_yahoo_price("DX=F")
     treasury_10y = fetch_yahoo_price("^TNX")
 
-    # Fallback for Gold if Yahoo fails
     if not gold_price:
         try:
             res = requests.get("https://goldpricez.com/api/lbma/usd", timeout=10)
@@ -67,12 +120,12 @@ def fetch_market_data():
 
     return {
         "gold": gold_price,
-        "dxy": dxy if dxy else 104.0,           # Safe structural fallback
-        "us10y": treasury_10y if treasury_10y else 4.20  # Safe structural fallback
+        "dxy": dxy if dxy else 104.0,
+        "us10y": treasury_10y if treasury_10y else 4.20
     }
 
 def fetch_news_and_sentiment():
-    """Fetches macroeconomic/gold headlines and computes VADER sentiment scores."""
+    """Fetches news and calculates VADER sentiment."""
     headlines = []
     compound_scores = []
     
@@ -87,7 +140,7 @@ def fetch_news_and_sentiment():
             print(f"Error fetching news from Finnhub: {e}")
             
     if not headlines:
-        headlines = ["Global financial markets remain attentive to US monetary policy, European economic data, and Asian demand trends."]
+        headlines = ["Global financial markets remain attentive to monetary policy, inflation figures, and economic forecasts."]
     
     sia = SentimentIntensityAnalyzer()
     for text in headlines:
@@ -111,22 +164,18 @@ def fetch_news_and_sentiment():
 
 
 # ==========================================
-# 2. FEATURE ENGINEERING
+# 2. FEATURE ENGINEERING & TRAINING
 # ==========================================
 
 def calculate_technical_indicators(df):
-    """Calculates technical indicators safely on price and macro columns."""
     df = df.copy()
-    
     if 'price' not in df.columns or df['price'].isnull().all():
         raise ValueError("DataFrame missing valid 'price' column.")
 
-    # Price Returns
     df['ret_1d'] = df['price'].pct_change(1).fillna(0)
     df['ret_3d'] = df['price'].pct_change(3).fillna(0)
     df['ret_5d'] = df['price'].pct_change(5).fillna(0)
     
-    # Moving Averages & RSI
     df['sma_5'] = df['price'].rolling(5, min_periods=1).mean()
     df['sma_20'] = df['price'].rolling(20, min_periods=1).mean()
     df['ma_ratio'] = (df['sma_5'] / (df['sma_20'] + 1e-8)).fillna(1.0)
@@ -139,35 +188,18 @@ def calculate_technical_indicators(df):
     
     df['volatility'] = df['ret_1d'].rolling(10, min_periods=1).std().fillna(0.0)
 
-    # Macro Indicators (DXY and US10Y Yields)
-    if 'dxy' in df.columns:
-        df['dxy_change'] = df['dxy'].pct_change(1).fillna(0)
-    else:
-        df['dxy_change'] = 0.0
-
-    if 'us10y' in df.columns:
-        df['us10y_change'] = df['us10y'].pct_change(1).fillna(0)
-    else:
-        df['us10y_change'] = 0.0
+    df['dxy_change'] = df['dxy'].pct_change(1).fillna(0) if 'dxy' in df.columns else 0.0
+    df['us10y_change'] = df['us10y'].pct_change(1).fillna(0) if 'us10y' in df.columns else 0.0
     
     return df
 
-
-# ==========================================
-# 3. TRAIN ML MODELS & PREDICT
-# ==========================================
-
 def train_and_predict(df, current_news_sentiment):
-    """Trains XGBoost/RandomForest on technicals, macro variables, and news sentiment."""
     df = calculate_technical_indicators(df)
-    
     last_price = float(df['price'].iloc[-1])
 
-    # Feature List
     features = ['ret_1d', 'ret_3d', 'ret_5d', 'ma_ratio', 'rsi', 'volatility', 'dxy_change', 'us10y_change', 'news_sentiment']
     df['news_sentiment'] = current_news_sentiment
 
-    # If history is sparse, return a baseline heuristic estimate
     if len(df) < 10:
         target = float(last_price * (1.0015 if current_news_sentiment >= 0 else 0.9985))
         direction = "UP" if current_news_sentiment >= 0 else "DOWN"
@@ -190,11 +222,11 @@ def train_and_predict(df, current_news_sentiment):
     latest_X = pd.DataFrame([df[features].iloc[-1]])
     
     if HAS_XGBOOST:
-        clf = XGBClassifier(n_estimators=40, max_depth=3, learning_rate=0.05, eval_metric="logloss")
-        reg = XGBRegressor(n_estimators=40, max_depth=3, learning_rate=0.05)
+        clf = XGBClassifier(n_estimators=50, max_depth=3, learning_rate=0.05, eval_metric="logloss")
+        reg = XGBRegressor(n_estimators=50, max_depth=3, learning_rate=0.05)
     else:
-        clf = RandomForestClassifier(n_estimators=40, max_depth=3)
-        reg = RandomForestRegressor(n_estimators=40, max_depth=3)
+        clf = RandomForestClassifier(n_estimators=50, max_depth=3)
+        reg = RandomForestRegressor(n_estimators=50, max_depth=3)
         
     clf.fit(X, y_dir)
     reg.fit(X, y_price)
@@ -207,14 +239,10 @@ def train_and_predict(df, current_news_sentiment):
 
 
 # ==========================================
-# 4. MAIN EXECUTION PIPELINE
+# 3. MAIN EXECUTION PIPELINE
 # ==========================================
 
 def main():
-    market_data = fetch_market_data()
-    news_data = fetch_news_and_sentiment()
-    
-    # Load existing price history
     history = []
     if os.path.exists(PRICE_HISTORY_FILE):
         try:
@@ -223,14 +251,18 @@ def main():
         except Exception:
             history = []
 
+    # If history is missing or has fewer than 50 data points, run automatic 1-year backfill
+    if len(history) < 50:
+        history = bootstrap_1year_history()
+
+    market_data = fetch_market_data()
+    news_data = fetch_news_and_sentiment()
+    
     current_gold = market_data['gold']
     if not current_gold:
-        if len(history) > 0 and 'price' in history[-1]:
-            current_gold = float(history[-1]['price'])
-        else:
-            current_gold = 2400.0
+        current_gold = float(history[-1]['price']) if len(history) > 0 else 2400.0
 
-    # Append current record with macro fields
+    # Append live data point to the dataset
     history.append({
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "price": current_gold,
@@ -238,7 +270,7 @@ def main():
         "us10y": market_data['us10y']
     })
     
-    # Maintain last 1000 records
+    # Preserve last 1000 data points
     history = history[-1000:]
     
     with open(PRICE_HISTORY_FILE, "w") as f:
@@ -246,7 +278,6 @@ def main():
             
     df = pd.DataFrame(history)
     
-    # Execute Model Training & Prediction
     pred_dir, win_prob, target_price = train_and_predict(df, news_data['score'])
     
     output = {
@@ -265,7 +296,7 @@ def main():
     with open(PREDICTION_FILE, "w") as f:
         json.dump(output, f, indent=2)
         
-    print("✅ Successfully updated gold predictions, macro indicators (DXY/US10Y), and sentiment!")
+    print(f"✅ Successfully processed {len(history)} historical records and generated predictions!")
     print(json.dumps(output, indent=2))
 
 if __name__ == "__main__":
