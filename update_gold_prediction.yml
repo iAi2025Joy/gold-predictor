@@ -1,0 +1,35 @@
+name: Update Gold Prediction
+
+# Runs on a schedule, entirely on GitHub's own free infrastructure --
+# no Render Cron Job or Background Worker needed for this piece.
+on:
+  schedule:
+    # Every 8 hours, at minute 0. GitHub Actions schedules are always
+    # in UTC. Same cadence as originally planned for the Render Cron Job.
+    - cron: '0 */8 * * *'
+  # Also allows manually triggering a run from the GitHub Actions tab,
+  # useful for testing without waiting for the schedule.
+  workflow_dispatch: {}
+
+jobs:
+  update-prediction:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install pandas numpy scikit-learn scipy requests
+
+      - name: Run prediction updater
+        env:
+          GOLD_API_KEY: ${{ secrets.GOLD_API_KEY }}
+          BACKEND_HISTORY_URL: ${{ secrets.BACKEND_HISTORY_URL }}
+          BACKEND_UPDATE_URL: ${{ secrets.BACKEND_UPDATE_URL }}
+          BACKEND_SHARED_SECRET: ${{ secrets.BACKEND_SHARED_SECRET }}
+        run: python gold_predictor_updater.py
