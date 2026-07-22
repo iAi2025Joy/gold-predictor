@@ -1,0 +1,40 @@
+name: Update Gold Prediction
+
+# Runs on a schedule, entirely on GitHub's own free infrastructure.
+# Hourly, since the live price source (Binance's public API) has no
+# meaningful rate limit for this volume -- unlike the original GoldAPI
+# source (100 requests/month free tier), which capped this at every 8
+# hours. See gold_predictor_updater.py's fetch_live_price() for details.
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  update-prediction:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install pandas numpy scikit-learn scipy requests
+
+      - name: Run prediction updater
+        run: python gold_predictor_updater.py
+
+      - name: Commit and push updated prediction data
+        run: |
+          git config user.name "gold-predictor-bot"
+          git config user.email "actions@github.com"
+          git add gold_prediction_latest.json gold_price_history.json
+          git diff --staged --quiet && echo "No changes to commit" || git commit -m "Update gold prediction data [automated]"
+          git push
