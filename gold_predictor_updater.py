@@ -57,7 +57,7 @@ def fetch_yahoo_history(ticker, range_str="1y", interval="1d"):
 
 def bootstrap_1year_history():
     """Initializes gold_price_history.json with 1 year of daily historical data if empty/new."""
-    print("Fetching 1 year of daily historical market data...")
+    print("Fetching 1 year of daily historical market data (Gold, DXY, US10Y)...")
     gold_hist = fetch_yahoo_history("GC=F", range_str="1y", interval="1d")
     dxy_hist = fetch_yahoo_history("DX-Y.NYB", range_str="1y", interval="1d")
     tnx_hist = fetch_yahoo_history("^TNX", range_str="1y", interval="1d")
@@ -89,7 +89,7 @@ def bootstrap_1year_history():
     return combined_history
 
 def fetch_yahoo_price(ticker):
-    """Fetch current live price."""
+    """Fetch live price for a given ticker."""
     url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker}?interval=1m&range=1d"
     try:
         res = requests.get(url, headers=HEADERS, timeout=10)
@@ -103,11 +103,12 @@ def fetch_yahoo_price(ticker):
     return None
 
 def fetch_market_data():
-    """Fetches live Gold, DXY, and US 10-Year Bond Yield."""
+    """Fetches live Gold, DXY (Dollar Index), and US 10-Year Bond Yield."""
     gold_price = fetch_yahoo_price("GC=F")
     dxy = fetch_yahoo_price("DX-Y.NYB") or fetch_yahoo_price("DX=F")
     treasury_10y = fetch_yahoo_price("^TNX")
 
+    # Fallback for Gold if Yahoo fails
     if not gold_price:
         try:
             res = requests.get("https://goldpricez.com/api/lbma/usd", timeout=10)
@@ -125,7 +126,7 @@ def fetch_market_data():
     }
 
 def fetch_news_and_sentiment():
-    """Fetches news and calculates VADER sentiment."""
+    """Fetches macroeconomic/gold headlines and computes VADER sentiment scores."""
     headlines = []
     compound_scores = []
     
@@ -140,7 +141,7 @@ def fetch_news_and_sentiment():
             print(f"Error fetching news from Finnhub: {e}")
             
     if not headlines:
-        headlines = ["Global financial markets remain attentive to monetary policy, inflation figures, and economic forecasts."]
+        headlines = ["Global financial markets remain attentive to US monetary policy, inflation figures, and economic forecasts."]
     
     sia = SentimentIntensityAnalyzer()
     for text in headlines:
@@ -168,14 +169,17 @@ def fetch_news_and_sentiment():
 # ==========================================
 
 def calculate_technical_indicators(df):
+    """Calculates technical indicators on price and macro columns."""
     df = df.copy()
     if 'price' not in df.columns or df['price'].isnull().all():
         raise ValueError("DataFrame missing valid 'price' column.")
 
+    # Price Returns
     df['ret_1d'] = df['price'].pct_change(1).fillna(0)
     df['ret_3d'] = df['price'].pct_change(3).fillna(0)
     df['ret_5d'] = df['price'].pct_change(5).fillna(0)
     
+    # Moving Averages & RSI
     df['sma_5'] = df['price'].rolling(5, min_periods=1).mean()
     df['sma_20'] = df['price'].rolling(20, min_periods=1).mean()
     df['ma_ratio'] = (df['sma_5'] / (df['sma_20'] + 1e-8)).fillna(1.0)
@@ -188,12 +192,14 @@ def calculate_technical_indicators(df):
     
     df['volatility'] = df['ret_1d'].rolling(10, min_periods=1).std().fillna(0.0)
 
+    # Macro Indicators
     df['dxy_change'] = df['dxy'].pct_change(1).fillna(0) if 'dxy' in df.columns else 0.0
     df['us10y_change'] = df['us10y'].pct_change(1).fillna(0) if 'us10y' in df.columns else 0.0
     
     return df
 
 def train_and_predict(df, current_news_sentiment):
+    """Trains ML models on technicals, macro variables, and news sentiment."""
     df = calculate_technical_indicators(df)
     last_price = float(df['price'].iloc[-1])
 
@@ -270,8 +276,8 @@ def main():
         "us10y": market_data['us10y']
     })
     
-    # Preserve last 1000 data points
-    history = history[-1000:]
+    # Preserve up to 10,000 data points (multi-year retention)
+    history = history[-10000:]
     
     with open(PRICE_HISTORY_FILE, "w") as f:
         json.dump(history, f, indent=2)
