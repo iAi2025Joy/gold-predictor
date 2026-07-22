@@ -1,0 +1,45 @@
+name: Update Gold Prediction
+
+# Runs on a schedule, entirely on GitHub's own free infrastructure.
+#
+# CORRECTION: an earlier version of this workflow ran hourly, using
+# Binance's public API for live prices. That failed: Binance blocks
+# automated/datacenter traffic, and GitHub Actions' servers are exactly
+# that -- confirmed directly via a real HTTP 451 error. Back to GoldAPI.io
+# (confirmed reliable from GitHub Actions) and its free-tier budget of
+# every 8 hours, at minute 0.
+on:
+  schedule:
+    - cron: '0 */8 * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  update-prediction:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install pandas numpy scikit-learn scipy requests
+
+      - name: Run prediction updater
+        env:
+          GOLD_API_KEY: ${{ secrets.GOLD_API_KEY }}
+        run: python gold_predictor_updater.py
+
+      - name: Commit and push updated prediction data
+        run: |
+          git config user.name "gold-predictor-bot"
+          git config user.email "actions@github.com"
+          git add gold_prediction_latest.json gold_price_history.json
+          git diff --staged --quiet && echo "No changes to commit" || git commit -m "Update gold prediction data [automated]"
+          git push
