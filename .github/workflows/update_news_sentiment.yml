@@ -1,0 +1,41 @@
+name: Update News Sentiment
+
+# Separate, less-frequent schedule than the hourly price job -- Alpha
+# Vantage's free tier is 25 requests/day TOTAL, and this script uses 1
+# request per run. Every 6 hours = 4 requests/day, leaving comfortable
+# headroom for manual test runs.
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  update-sentiment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run news sentiment fetcher
+        env:
+          ALPHAVANTAGE_API_KEY: ${{ secrets.ALPHAVANTAGE_API_KEY }}
+        run: python news_sentiment_fetcher.py
+
+      - name: Commit and push updated sentiment data
+        run: |
+          git config user.name "gold-predictor-bot"
+          git config user.email "actions@github.com"
+          git add news_sentiment_history.json
+          git diff --staged --quiet && echo "No changes to commit" || git commit -m "Update news sentiment data [automated]"
+          git push
