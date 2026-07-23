@@ -1,0 +1,45 @@
+name: Update Oil Prediction
+
+# Runs DAILY (not hourly, unlike gold) -- Alpha Vantage's WTI/BRENT
+# commodity endpoints only support daily/weekly/monthly granularity, so
+# there's no benefit to running this more often than once a day; it would
+# just fetch the same day's value repeatedly. Uses the SAME
+# ALPHAVANTAGE_API_KEY already configured for news_sentiment_fetcher.py --
+# no new secret needed. This adds +1 request/day to that shared 25/day
+# budget (currently ~4-5/day used), leaving comfortable headroom.
+on:
+  schedule:
+    - cron: '0 6 * * *'   # once daily, 06:00 UTC -- after most exchanges have a settled prior-day close
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  update-oil-prediction:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install pandas numpy scikit-learn scipy requests
+
+      - name: Run oil prediction updater
+        env:
+          ALPHAVANTAGE_API_KEY: ${{ secrets.ALPHAVANTAGE_API_KEY }}
+          OILPRICEAPI_KEY: ${{ secrets.OILPRICEAPI_KEY }}
+        run: python oil_predictor_updater.py
+
+      - name: Commit and push updated oil prediction data
+        run: |
+          git config user.name "oil-predictor-bot"
+          git config user.email "actions@github.com"
+          git add oil_prediction_latest.json oil_price_history.json
+          git diff --staged --quiet && echo "No changes to commit" || git commit -m "Update oil prediction data [automated]"
+          git push
