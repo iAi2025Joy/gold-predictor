@@ -1,0 +1,36 @@
+name: One-Time Historical Backfill
+
+# Manual trigger ONLY -- this is a one-time setup step, not a recurring
+# job (unlike update_gold_prediction.yml, which has a schedule). Run this
+# once from the Actions tab, then you never need to run it again.
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write   # needed so this workflow can commit the backfilled history file into the repo
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run one-time backfill
+        run: python backfill_paxg_history.py
+
+      - name: Commit and push backfilled history
+        run: |
+          git config user.name "gold-predictor-bot"
+          git config user.email "actions@github.com"
+          git add gold_price_history.json
+          git diff --staged --quiet && echo "No changes to commit" || git commit -m "One-time historical backfill from PAXG [automated]"
+          git push
