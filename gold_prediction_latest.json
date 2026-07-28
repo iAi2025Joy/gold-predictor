@@ -1,18 +1,18 @@
 {
   "prediction": "down",
-  "prediction_probability_up": 0.41822089461990203,
-  "confidence_note": "This model (logistic regression, chosen because it scored best on real held-out test data) had backtested accuracy (57.1%) that was statistically distinguishable from the majority-class baseline (42.0%) via McNemar's test, meaning the model adds real signal beyond the trivial baseline -- but this is still a modest statistical signal, not a guarantee -- present it with appropriate caveats.",
+  "prediction_probability_up": 0.41439825815211384,
+  "confidence_note": "This model (logistic regression, chosen because it scored best on real held-out test data) had backtested accuracy (57.3%) that was statistically distinguishable from the majority-class baseline (41.8%) via McNemar's test, meaning the model adds real signal beyond the trivial baseline -- but this is still a modest statistical signal, not a guarantee -- present it with appropriate caveats.",
   "model_type_used": "logistic_regression",
-  "current_price_usd": 4022.78,
-  "predicted_price_usd": 3994.427113418844,
+  "current_price_usd": 4017.155,
+  "predicted_price_usd": 3990.8552621465797,
   "price_model_type_used": "linear_regression",
   "price_direction_vs_current": "lower",
   "direction_price_agreement": true,
   "price_confidence_note": "This price forecast (linear regression, chosen because it scored best on real held-out test data) had error that was not statistically better than simply assuming tomorrow's price equals today's price (Wilcoxon signed-rank test on squared errors). Present the dollar figure as the model's best guess only -- do not imply it is a reliable forecast beyond the current price itself.",
   "is_price_prediction_significant": false,
   "model_accuracy_vs_baseline": {
-    "model": 0.5714285714285714,
-    "baseline": 0.42016806722689076
+    "model": 0.5732217573221757,
+    "baseline": 0.41841004184100417
   },
   "is_statistically_significant": true,
   "latest_news_sentiment_score": 0.09514566666666667,
@@ -23,16 +23,16 @@
   "macro_data_currently_available": true,
   "recency_weighting_half_life_days": 30,
   "next_economic_event_name": "FOMC Rate Decision",
-  "hours_until_next_economic_event": 1.7,
+  "hours_until_next_economic_event": 1.3,
   "in_high_impact_event_window_48h": true,
   "economic_calendar_needs_update": false,
   "historical_data_start_date": "2025-07-22",
   "historical_data_end_date": "2026-07-28",
-  "updated_at": "2026-07-28T22:19:41.694818+00:00",
-  "data_points_used": 1209,
-  "rolling_predictions_tracked": 11,
-  "rolling_direction_accuracy": 0.7272727272727273,
-  "rolling_price_mae_usd": 18.91969968650309,
+  "updated_at": "2026-07-28T22:40:41.641172+00:00",
+  "data_points_used": 1210,
+  "rolling_predictions_tracked": 12,
+  "rolling_direction_accuracy": 0.75,
+  "rolling_price_mae_usd": 19.23704859439086,
   "rolling_accuracy_is_significant": false,
-  "rolling_accuracy_note": "Only 11 resolved live predictions so far (need at least 20 for a meaningful significance test). Raw accuracy so far: 8/11 (72.7%), but treat this as too small a sample to draw a real conclusion from yet."
+  "rolling_accuracy_note": "Only 12 resolved live predictions so far (need at least 20 for a meaningful significance test). Raw accuracy so far: 9/12 (75.0%), but treat this as too small a sample to draw a real conclusion from yet."
 }
