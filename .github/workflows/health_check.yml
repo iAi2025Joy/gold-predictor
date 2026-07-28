@@ -1,0 +1,29 @@
+name: Reliability Health Check
+
+# Runs twice an hour, offset from the main prediction jobs (which run on
+# the hour), so it's checking data that's had a chance to actually
+# update. This workflow does NOT commit anything back -- it's read-only,
+# purely a watchdog. See health_check.py for what it actually checks and
+# why a failed run here is a genuinely useful alert, not just noise.
+on:
+  schedule:
+    - cron: '15,45 * * * *'
+  workflow_dispatch: {}
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run health check
+        run: python health_check.py
