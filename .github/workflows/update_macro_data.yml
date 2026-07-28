@@ -1,0 +1,42 @@
+name: Update Macro Data
+
+# Same 6-hour cadence as update_news_sentiment.yml. FRED's free API has no
+# meaningful rate limit for this volume, but these are DAILY series (see
+# macro_data_fetcher.py) so there's no real benefit to polling more often
+# than that -- most runs in a given day will just re-confirm the same
+# value until FRED publishes a new one, which is expected.
+on:
+  schedule:
+    - cron: '30 */6 * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  update-macro:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run macro data fetcher
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+        run: python macro_data_fetcher.py
+
+      - name: Commit and push updated macro data
+        run: |
+          git config user.name "gold-predictor-bot"
+          git config user.email "actions@github.com"
+          git add macro_history.json
+          git diff --staged --quiet && echo "No changes to commit" || git commit -m "Update macro data [automated]"
+          git push
