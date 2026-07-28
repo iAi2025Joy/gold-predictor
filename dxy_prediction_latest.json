@@ -11,10 +11,33 @@
   "is_price_prediction_significant": false,
   "model_accuracy_vs_baseline": null,
   "is_statistically_significant": false,
+  "current_fed_funds_rate_lower_pct": 3.5,
+  "current_fed_funds_rate_upper_pct": 3.75,
+  "fed_rate_outlook": {
+    "source": "Federal Reserve Summary of Economic Projections (SEP), released June 17, 2026 -- the median federal funds rate projection ('dot plot') from FOMC participants. This is the Fed's OWN stated projection, not market-implied probability (e.g. CME FedWatch), which has no free/legal API this project can use.",
+    "sep_release_date": "2026-06-17",
+    "next_sep_release_expected": "2026-09-16",
+    "note": "The SEP is only produced at 4 of the 8 annual FOMC meetings (March, June, September, December). This file must be manually updated after each of those meetings using the real, published projections from federalreserve.gov -- it will otherwise silently go stale, same maintenance pattern as economic_calendar.json.",
+    "median_fed_funds_rate_projection_pct": {
+      "end_2026": 3.8,
+      "end_2027": 3.6,
+      "end_2028": 3.4,
+      "longer_run": 3.1
+    },
+    "prior_sep_for_comparison": {
+      "release_date": "2026-03-18",
+      "median_fed_funds_rate_projection_pct": {
+        "end_2026": 3.4,
+        "end_2027": 3.1
+      }
+    },
+    "context_note": "The June 2026 SEP shifted notably more hawkish than March's: 9 of 18 participants projected at least one 2026 rate hike, versus March's median implying a cut. Fed Chair Kevin Warsh (new as of this meeting) did not submit a personal projection."
+  },
+  "fed_rate_outlook_note": "fed_rate_outlook contains the Fed's OWN published median rate projections (the 'dot plot'), NOT market-implied probability -- always attribute correctly. This field works independently of the DXY prediction model above, so it's available even while that model is still gathering enough data.",
   "historical_data_start_date": "2026-07-28",
   "historical_data_end_date": "2026-07-28",
-  "updated_at": "2026-07-28T21:44:04.155979+00:00",
-  "data_points_used": 11,
+  "updated_at": "2026-07-28T22:00:13.601618+00:00",
+  "data_points_used": 12,
   "rolling_predictions_tracked": 0,
   "rolling_direction_accuracy": null,
   "rolling_price_mae": null,
