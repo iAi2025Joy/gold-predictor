@@ -1,0 +1,20 @@
+{
+  "source": "Federal Reserve Summary of Economic Projections (SEP), released June 17, 2026 -- the median federal funds rate projection ('dot plot') from FOMC participants. This is the Fed's OWN stated projection, not market-implied probability (e.g. CME FedWatch), which has no free/legal API this project can use.",
+  "sep_release_date": "2026-06-17",
+  "next_sep_release_expected": "2026-09-16",
+  "note": "The SEP is only produced at 4 of the 8 annual FOMC meetings (March, June, September, December). This file must be manually updated after each of those meetings using the real, published projections from federalreserve.gov -- it will otherwise silently go stale, same maintenance pattern as economic_calendar.json.",
+  "median_fed_funds_rate_projection_pct": {
+    "end_2026": 3.8,
+    "end_2027": 3.6,
+    "end_2028": 3.4,
+    "longer_run": 3.1
+  },
+  "prior_sep_for_comparison": {
+    "release_date": "2026-03-18",
+    "median_fed_funds_rate_projection_pct": {
+      "end_2026": 3.4,
+      "end_2027": 3.1
+    }
+  },
+  "context_note": "The June 2026 SEP shifted notably more hawkish than March's: 9 of 18 participants projected at least one 2026 rate hike, versus March's median implying a cut. Fed Chair Kevin Warsh (new as of this meeting) did not submit a personal projection."
+}
