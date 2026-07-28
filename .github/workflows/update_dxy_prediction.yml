@@ -1,0 +1,39 @@
+name: Update DXY Prediction
+
+# Runs 20 minutes after update_macro_data.yml (same 6-hour cadence),
+# giving the macro data commit time to land before this reads it. No new
+# API key needed -- this trains entirely on macro_history.json, which
+# update_macro_data.yml already maintains.
+on:
+  schedule:
+    - cron: '50 */6 * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  update-dxy-prediction:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install pandas numpy scikit-learn scipy requests
+
+      - name: Run DXY prediction updater
+        run: python dxy_predictor_updater.py
+
+      - name: Commit and push updated DXY prediction data
+        run: |
+          git config user.name "gold-predictor-bot"
+          git config user.email "actions@github.com"
+          git add dxy_prediction_latest.json dxy_prediction_track_record.json
+          git diff --staged --quiet && echo "No changes to commit" || git commit -m "Update DXY prediction data [automated]"
+          git push
