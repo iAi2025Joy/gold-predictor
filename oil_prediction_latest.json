@@ -1,7 +1,7 @@
 {
   "prediction": "up",
-  "prediction_probability_up": 0.5535844600499698,
-  "confidence_note": "This model (gradient boosting, chosen because it scored best of the two candidates tried) had backtested accuracy (50.3%) that was actually LOWER than simply always predicting the majority class (52.9%) on real held-out test data -- this model showed no real edge and underperformed even the trivial baseline. Treat any direction call from it with strong skepticism, not just mild caution -- it is not a case of 'close but unproven', it actively did worse.",
+  "prediction_probability_up": 0.5554427157356137,
+  "confidence_note": "This model (gradient boosting, chosen because it scored best of the two candidates tried) had backtested accuracy (50.8%) that was actually LOWER than simply always predicting the majority class (52.9%) on real held-out test data -- this model showed no real edge and underperformed even the trivial baseline. Treat any direction call from it with strong skepticism, not just mild caution -- it is not a case of 'close but unproven', it actively did worse.",
   "model_type_used": "gradient_boosting",
   "current_price_usd": 84.67,
   "predicted_price_usd": 86.75646890625677,
@@ -11,7 +11,7 @@
   "price_confidence_note": "This price forecast (linear regression, chosen because it scored best on real held-out test data) had error that was NOT statistically better than simply assuming tomorrow's price equals today's price (Wilcoxon signed-rank test on squared errors). Present the dollar figure as the model's best guess only -- do not imply it is a reliable forecast beyond the current price itself.",
   "is_price_prediction_significant": false,
   "model_accuracy_vs_baseline": {
-    "model": 0.5034313725490196,
+    "model": 0.5078431372549019,
     "baseline": 0.528921568627451
   },
   "is_statistically_significant": false,
@@ -39,14 +39,14 @@
   "economic_calendar_needs_update": false,
   "historical_data_start_date": "1986-01-02",
   "historical_data_end_date": "2026-08-02",
-  "updated_at": "2026-08-02T04:06:17.009291+00:00",
+  "updated_at": "2026-08-02T04:28:12.186165+00:00",
   "data_points_used": 10217,
   "current_price_source": "live_oilpriceapi",
-  "rolling_predictions_tracked": 28,
-  "rolling_direction_accuracy": 0.25,
-  "rolling_price_mae_usd": 1.789100329830689,
+  "rolling_predictions_tracked": 29,
+  "rolling_direction_accuracy": 0.2413793103448276,
+  "rolling_price_mae_usd": 1.7993544186729675,
   "rolling_accuracy_is_significant": false,
-  "rolling_accuracy_note": "Over the last 28 resolved live predictions, this system was correct on direction 7 times (25.0%). This is NOT statistically distinguishable from a coin flip (binomial test) -- treat recent direction calls as having no demonstrated live edge yet.",
+  "rolling_accuracy_note": "Over the last 29 resolved live predictions, this system was correct on direction 7 times (24.1%). This is NOT statistically distinguishable from a coin flip (binomial test) -- treat recent direction calls as having no demonstrated live edge yet.",
   "cross_asset_consistency_with_dollar": "not_available",
   "cross_asset_consistency_note": "The DXY prediction model does not yet have a real direction call to compare against (commonly because it's still in its data ramp-up period)."
 }
