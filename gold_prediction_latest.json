@@ -1,7 +1,7 @@
 {
   "prediction": "up",
-  "prediction_probability_up": 0.5009368684929524,
-  "confidence_note": "This model (logistic regression, chosen because it scored best on real held-out test data) had backtested accuracy (56.5%) that was statistically distinguishable from the majority-class baseline (34.0%) via McNemar's test, meaning the model adds real signal beyond the trivial baseline -- but this is still a modest statistical signal, not a guarantee -- present it with appropriate caveats.",
+  "prediction_probability_up": 0.500931776965623,
+  "confidence_note": "This model (logistic regression, chosen because it scored best on real held-out test data) had backtested accuracy (56.3%) that was statistically distinguishable from the majority-class baseline (33.8%) via McNemar's test, meaning the model adds real signal beyond the trivial baseline -- but this is still a modest statistical signal, not a guarantee -- present it with appropriate caveats.",
   "model_type_used": "logistic_regression",
   "current_price_usd": 4043.21,
   "predicted_price_usd": 4039.610672482791,
@@ -11,8 +11,8 @@
   "price_confidence_note": "This price forecast (linear regression, chosen because it scored best on real held-out test data) had error that was not statistically better than simply assuming tomorrow's price equals today's price (Wilcoxon signed-rank test on squared errors). Present the dollar figure as the model's best guess only -- do not imply it is a reliable forecast beyond the current price itself.",
   "is_price_prediction_significant": false,
   "model_accuracy_vs_baseline": {
-    "model": 0.5648854961832062,
-    "baseline": 0.33969465648854963
+    "model": 0.5627376425855514,
+    "baseline": 0.33840304182509506
   },
   "is_statistically_significant": true,
   "latest_news_sentiment_score": 0.13105,
@@ -43,13 +43,13 @@
   "economic_calendar_needs_update": false,
   "historical_data_start_date": "2025-07-22",
   "historical_data_end_date": "2026-08-02",
-  "updated_at": "2026-08-02T07:22:41.955375+00:00",
-  "data_points_used": 1329,
+  "updated_at": "2026-08-02T07:39:14.450121+00:00",
+  "data_points_used": 1330,
   "rolling_predictions_tracked": 50,
-  "rolling_direction_accuracy": 0.84,
-  "rolling_price_mae_usd": 4.455185048973235,
+  "rolling_direction_accuracy": 0.82,
+  "rolling_price_mae_usd": 4.303731069122578,
   "rolling_accuracy_is_significant": true,
-  "rolling_accuracy_note": "Over the last 50 resolved live predictions, this system was correct on direction 42 times (84.0%). This is statistically distinguishable from a coin flip (binomial test, p<0.05) -- real, if modest, live edge.",
+  "rolling_accuracy_note": "Over the last 50 resolved live predictions, this system was correct on direction 41 times (82.0%). This is statistically distinguishable from a coin flip (binomial test, p<0.05) -- real, if modest, live edge.",
   "cross_asset_consistency_with_dollar": "not_available",
   "cross_asset_consistency_note": "The DXY prediction model does not yet have a real direction call to compare against (commonly because it's still in its data ramp-up period)."
 }
