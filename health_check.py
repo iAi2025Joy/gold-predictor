@@ -39,7 +39,19 @@ BACKEND_HEALTH_URL = "https://ai-chat-backend-3-g573.onrender.com/"
 GOLD_PREDICTION_FILE = "gold_prediction_latest.json"
 OIL_PREDICTION_FILE = "oil_prediction_latest.json"
 DXY_PREDICTION_FILE = "dxy_prediction_latest.json"
-STALE_THRESHOLD_HOURS = 4  # hourly job runs every hour -- this allows a couple of missed/delayed runs before actually alerting, to avoid false alarms
+STALE_THRESHOLD_HOURS = 4  # gold's update job runs every hour -- this allows a couple of missed/delayed runs before actually alerting, to avoid false alarms
+# FIXED this session: oil's update job (update_oil_prediction.yml) runs
+# only ONCE A DAY, not hourly -- confirmed in that workflow's own header
+# comment ("Alpha Vantage's WTI/BRENT endpoints only support
+# daily/weekly/monthly granularity"). It was previously inheriting
+# gold's 4h STALE_THRESHOLD_HOURS default by omission, the same mistake
+# DXY (correctly given its own 10h threshold below) didn't have. That
+# mismatch was the real cause of every "oil stale" alert -- the job was
+# never actually failing (114 straight green runs), it just always
+# looked stale to a check expecting hourly updates. 26h (a bit over the
+# 24h cadence) allows one run to land a little late without a false
+# alarm, same logic as the existing DXY threshold below.
+OIL_STALE_THRESHOLD_HOURS = 26
 DXY_STALE_THRESHOLD_HOURS = 10  # DXY updates every 6 hours, not hourly -- allow one missed cycle
 
 
@@ -92,7 +104,9 @@ def main():
     checks = [
         check_backend_health(),
         check_freshness(GOLD_PREDICTION_FILE, "Gold prediction"),
-        check_freshness(OIL_PREDICTION_FILE, "Oil prediction"),
+        # FIXED: now passes oil's own threshold instead of silently
+        # inheriting gold's 4h default.
+        check_freshness(OIL_PREDICTION_FILE, "Oil prediction", threshold_hours=OIL_STALE_THRESHOLD_HOURS),
         check_freshness(DXY_PREDICTION_FILE, "DXY prediction", threshold_hours=DXY_STALE_THRESHOLD_HOURS),
     ]
 
