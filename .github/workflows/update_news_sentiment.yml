@@ -38,4 +38,22 @@ jobs:
           git config user.email "actions@github.com"
           git add news_sentiment_history.json
           git diff --staged --quiet && echo "No changes to commit" || git commit -m "Update news sentiment data [automated]"
-          git push
+
+          # FIXED: this repo has several independent scheduled bots
+          # (gold hourly, oil daily, DXY, macro, news sentiment) all
+          # committing to the same main branch. When two land close
+          # together, the second one's push gets rejected because the
+          # branch moved since it checked out -- confirmed as the real
+          # cause of this workflow's ~30% failure rate (run #211 etc.),
+          # not a broken fetch (the fetch step itself always succeeded).
+          # Each bot only touches its own file (this one only touches
+          # news_sentiment_history.json), so a rebase onto the latest
+          # remote main applies cleanly with no real conflicts -- retry
+          # up to 5 times, re-syncing before each attempt, so a losing
+          # race becomes a harmless retry instead of a failed run.
+          for i in 1 2 3 4 5; do
+            git push && break
+            echo "Push rejected (attempt $i/5) -- pulling latest changes and retrying..."
+            git pull --rebase origin main
+            sleep $((RANDOM % 5 + 1))
+          done

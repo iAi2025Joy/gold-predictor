@@ -42,4 +42,16 @@ jobs:
           git config user.email "actions@github.com"
           git add oil_prediction_latest.json oil_price_history.json oil_prediction_track_record.json
           git diff --staged --quiet && echo "No changes to commit" || git commit -m "Update oil prediction data [automated]"
-          git push
+
+          # FIXED same session as the news-sentiment fix: this repo has
+          # several independent scheduled bots on the same main branch,
+          # so an occasional push rejection from another bot's commit
+          # landing first is a real, if lower-odds (daily schedule,
+          # fewer overlaps), possibility here too. This bot only
+          # touches its own 3 oil_*.json files, so a rebase is safe.
+          for i in 1 2 3 4 5; do
+            git push && break
+            echo "Push rejected (attempt $i/5) -- pulling latest changes and retrying..."
+            git pull --rebase origin main
+            sleep $((RANDOM % 5 + 1))
+          done

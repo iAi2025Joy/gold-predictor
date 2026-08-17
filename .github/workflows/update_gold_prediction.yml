@@ -42,4 +42,16 @@ jobs:
           git config user.email "actions@github.com"
           git add gold_prediction_latest.json gold_price_history.json prediction_track_record.json
           git diff --staged --quiet && echo "No changes to commit" || git commit -m "Update gold prediction data [automated]"
-          git push
+
+          # FIXED same session as the news-sentiment fix: gold runs
+          # HOURLY, the most frequent of all these bots, so it's
+          # actually the most likely one to collide with the others --
+          # same retry-with-rebase fix, safe since this bot only
+          # touches its own 3 gold_*.json/prediction_track_record.json
+          # files.
+          for i in 1 2 3 4 5; do
+            git push && break
+            echo "Push rejected (attempt $i/5) -- pulling latest changes and retrying..."
+            git pull --rebase origin main
+            sleep $((RANDOM % 5 + 1))
+          done
