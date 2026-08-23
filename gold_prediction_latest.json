@@ -1,18 +1,18 @@
 {
   "prediction": "down",
-  "prediction_probability_up": 0.12477167889931808,
-  "confidence_note": "This model (gradient boosting, chosen because it scored best on real held-out test data) had backtested accuracy (67.7%) that was not statistically distinguishable from simply always predicting the majority class (65.5%) -- McNemar's test, not a comparison to blind chance, since the outcome can be imbalanced (e.g. during a strong sustained trend). Treat this prediction as having no reliable edge beyond the obvious baseline -- state that plainly rather than presenting the direction confidently.",
+  "prediction_probability_up": 0.1114267635346785,
+  "confidence_note": "This model (gradient boosting, chosen because it scored best on real held-out test data) had backtested accuracy (71.5%) that was not statistically distinguishable from simply always predicting the majority class (65.8%) -- McNemar's test, not a comparison to blind chance, since the outcome can be imbalanced (e.g. during a strong sustained trend). Treat this prediction as having no reliable edge beyond the obvious baseline -- state that plainly rather than presenting the direction confidently.",
   "model_type_used": "gradient_boosting",
   "current_price_usd": 4603.135,
-  "predicted_price_usd": 4633.46774963817,
+  "predicted_price_usd": 4636.395370508862,
   "price_model_type_used": "linear_regression",
   "price_direction_vs_current": "higher",
   "direction_price_agreement": false,
   "price_confidence_note": "This price forecast (linear regression, chosen because it scored best on real held-out test data) had error that was not statistically better than simply assuming tomorrow's price equals today's price (Wilcoxon signed-rank test on squared errors). Present the dollar figure as the model's best guess only -- do not imply it is a reliable forecast beyond the current price itself.",
   "is_price_prediction_significant": false,
   "model_accuracy_vs_baseline": {
-    "model": 0.6767123287671233,
-    "baseline": 0.6547945205479452
+    "model": 0.7150684931506849,
+    "baseline": 0.6575342465753424
   },
   "is_statistically_significant": false,
   "latest_news_sentiment_score": -0.075133,
@@ -43,13 +43,13 @@
   "economic_calendar_needs_update": false,
   "historical_data_start_date": "2025-07-22",
   "historical_data_end_date": "2026-08-23",
-  "updated_at": "2026-08-23T14:21:41.577350+00:00",
-  "data_points_used": 1842,
+  "updated_at": "2026-08-23T15:20:57.476654+00:00",
+  "data_points_used": 1843,
   "rolling_predictions_tracked": 100,
-  "rolling_direction_accuracy": 0.64,
-  "rolling_price_mae_usd": 27.175630132633707,
+  "rolling_direction_accuracy": 0.65,
+  "rolling_price_mae_usd": 27.42538698715487,
   "rolling_accuracy_is_significant": true,
-  "rolling_accuracy_note": "Over the last 100 resolved live predictions, this system was correct on direction 64 times (64.0%). This is statistically distinguishable from a coin flip (binomial test, p<0.05) -- real, if modest, live edge.",
+  "rolling_accuracy_note": "Over the last 100 resolved live predictions, this system was correct on direction 65 times (65.0%). This is statistically distinguishable from a coin flip (binomial test, p<0.05) -- real, if modest, live edge.",
   "cross_asset_consistency_with_dollar": "not_available",
   "cross_asset_consistency_note": "The DXY prediction model does not yet have a real direction call to compare against (commonly because it's still in its data ramp-up period)."
 }
