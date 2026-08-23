@@ -1,7 +1,7 @@
 {
   "prediction": "down",
-  "prediction_probability_up": 0.11855868425324997,
-  "confidence_note": "This model (gradient boosting, chosen because it scored best on real held-out test data) had backtested accuracy (69.3%) that was not statistically distinguishable from simply always predicting the majority class (66.0%) -- McNemar's test, not a comparison to blind chance, since the outcome can be imbalanced (e.g. during a strong sustained trend). Treat this prediction as having no reliable edge beyond the obvious baseline -- state that plainly rather than presenting the direction confidently.",
+  "prediction_probability_up": 0.13087943573883692,
+  "confidence_note": "This model (gradient boosting, chosen because it scored best on real held-out test data) had backtested accuracy (69.7%) that was not statistically distinguishable from simply always predicting the majority class (66.1%) -- McNemar's test, not a comparison to blind chance, since the outcome can be imbalanced (e.g. during a strong sustained trend). Treat this prediction as having no reliable edge beyond the obvious baseline -- state that plainly rather than presenting the direction confidently.",
   "model_type_used": "gradient_boosting",
   "current_price_usd": 4603.135,
   "predicted_price_usd": 4639.511118448376,
@@ -11,8 +11,8 @@
   "price_confidence_note": "This price forecast (linear regression, chosen because it scored best on real held-out test data) had error that was not statistically better than simply assuming tomorrow's price equals today's price (Wilcoxon signed-rank test on squared errors). Present the dollar figure as the model's best guess only -- do not imply it is a reliable forecast beyond the current price itself.",
   "is_price_prediction_significant": false,
   "model_accuracy_vs_baseline": {
-    "model": 0.6931506849315069,
-    "baseline": 0.6602739726027397
+    "model": 0.6967213114754098,
+    "baseline": 0.6612021857923497
   },
   "is_statistically_significant": false,
   "latest_news_sentiment_score": -0.075133,
@@ -43,11 +43,11 @@
   "economic_calendar_needs_update": false,
   "historical_data_start_date": "2025-07-22",
   "historical_data_end_date": "2026-08-23",
-  "updated_at": "2026-08-23T16:23:12.146457+00:00",
-  "data_points_used": 1844,
+  "updated_at": "2026-08-23T17:19:30.879829+00:00",
+  "data_points_used": 1845,
   "rolling_predictions_tracked": 100,
   "rolling_direction_accuracy": 0.65,
-  "rolling_price_mae_usd": 27.64566461045024,
+  "rolling_price_mae_usd": 27.925572510267713,
   "rolling_accuracy_is_significant": true,
   "rolling_accuracy_note": "Over the last 100 resolved live predictions, this system was correct on direction 65 times (65.0%). This is statistically distinguishable from a coin flip (binomial test, p<0.05) -- real, if modest, live edge.",
   "cross_asset_consistency_with_dollar": "not_available",
