@@ -29,13 +29,22 @@ redeploy it. It only makes a failure VISIBLE (a red X + an email)
 instead of silent, which is the actual gap this is closing.
 """
 
+import os
 import sys
 import json
 from datetime import datetime, timezone
 
 import requests
 
-BACKEND_HEALTH_URL = "https://ai-chat-backend-3-g573.onrender.com/"
+# The chatbot backend this used to ping (ai-chat-backend-3) was deleted, which
+# made every run fail with HTTP 404. The backend check is now OPTIONAL: set a
+# BACKEND_HEALTH_URL repository variable/secret (or edit the default below)
+# to turn it back on. When unset it is skipped, so it can't cause false alarms.
+BACKEND_HEALTH_URL = os.environ.get("BACKEND_HEALTH_URL", "").strip()
+GOLD_NEWS_FILE = "news_sentiment_history.json"
+OIL_NEWS_FILE = "oil_news_sentiment_history.json"
+# update_news_sentiment.yml runs every 6 hours -- 14h allows one missed run.
+NEWS_STALE_THRESHOLD_HOURS = 14
 GOLD_PREDICTION_FILE = "gold_prediction_latest.json"
 OIL_PREDICTION_FILE = "oil_prediction_latest.json"
 DXY_PREDICTION_FILE = "dxy_prediction_latest.json"
@@ -61,6 +70,8 @@ def check_backend_health():
     ~50 seconds to wake it back up -- give it real time and one retry
     before honestly calling it down, so a slow cold-start doesn't get
     misreported as an outage."""
+    if not BACKEND_HEALTH_URL:
+        return True, "Backend check skipped (BACKEND_HEALTH_URL not set)."
     last_error = None
     for attempt in range(2):
         try:
@@ -100,6 +111,41 @@ def check_freshness(filename, label, threshold_hours=STALE_THRESHOLD_HOURS):
     return True, f"{label}: fresh, last updated {age_hours:.1f} hours ago."
 
 
+def check_news_history_fresh(filename, label, threshold_hours=NEWS_STALE_THRESHOLD_HOURS):
+    """The news-sentiment history files are a LIST of entries, each with its
+    own 'timestamp' -- freshness is the age of the LAST entry. This is the
+    check that would have caught the Alpha Vantage 'premium endpoint'
+    failure the day it started (the prediction files stayed fresh because
+    they use other data, so nothing flagged news collection stopping)."""
+    try:
+        with open(filename) as f:
+            history = json.load(f)
+    except FileNotFoundError:
+        return False, f"{label}: file '{filename}' not found in repo."
+    except json.JSONDecodeError as err:
+        return False, f"{label}: file '{filename}' is not valid JSON ({err})."
+    if not isinstance(history, list) or not history:
+        return False, f"{label}: '{filename}' has no entries."
+    last = history[-1]
+    ts = last.get("timestamp")
+    if not ts:
+        return False, f"{label}: last entry in {filename} has no 'timestamp'."
+    try:
+        last_dt = datetime.fromisoformat(ts)
+    except ValueError:
+        return False, f"{label}: could not parse timestamp '{ts}'."
+    if last_dt.tzinfo is None:
+        last_dt = last_dt.replace(tzinfo=timezone.utc)
+    age_hours = (datetime.now(timezone.utc) - last_dt).total_seconds() / 3600
+    source = last.get("sentiment_source", "alphavantage (older entry)")
+    if age_hours > threshold_hours:
+        return False, (
+            f"{label}: newest entry is {age_hours:.1f} hours old (threshold: {threshold_hours}h) -- "
+            f"news collection may have stopped (source: {source})."
+        )
+    return True, f"{label}: fresh, newest entry {age_hours:.1f} hours old (source: {source})."
+
+
 def main():
     checks = [
         check_backend_health(),
@@ -108,6 +154,8 @@ def main():
         # inheriting gold's 4h default.
         check_freshness(OIL_PREDICTION_FILE, "Oil prediction", threshold_hours=OIL_STALE_THRESHOLD_HOURS),
         check_freshness(DXY_PREDICTION_FILE, "DXY prediction", threshold_hours=DXY_STALE_THRESHOLD_HOURS),
+        check_news_history_fresh(GOLD_NEWS_FILE, "Gold news sentiment"),
+        check_news_history_fresh(OIL_NEWS_FILE, "Oil news sentiment"),
     ]
 
     all_ok = True
