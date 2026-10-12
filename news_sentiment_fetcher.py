@@ -183,7 +183,7 @@ OIL_WORD_BOUNDARY_KEYWORDS = ["oil", "china", "opec"]
 OIL_EXCLUSIONS = ["olive oil", "cooking oil", "vegetable oil", "palm oil", "coconut oil", "sunflower oil", "essential oil"]
 
 
-def fetch_news_batch():
+def fetch_alpha_vantage_batch():
     # A confirmed real bug this fixes: sending topics="economy_macro,financial_markets"
     # as an input filter made Alpha Vantage reject the whole request with
     # "Invalid inputs" -- confirmed directly by testing the real API key
@@ -212,6 +212,73 @@ def fetch_news_batch():
     if "Information" in data and "feed" not in data:
         raise RuntimeError(f"Alpha Vantage returned an info message instead of data: {data['Information']}")
     return data.get("feed", [])
+
+FINNHUB_API_KEY = os.environ.get("FINNHUB_API_KEY", "")
+
+
+def fetch_finnhub_batch():
+    """FALLBACK source, used only when Alpha Vantage refuses the call (it
+    started answering "This is a premium endpoint" for NEWS_SENTIMENT on the
+    free key). Finnhub's free plan returns recent general + forex market
+    headlines but NO sentiment score, so a score is computed locally from
+    each headline with VADER (a standard, offline sentiment model). Output is
+    shaped like Alpha Vantage's feed (title + overall_sentiment_score, range
+    -1..1) so the keyword filtering and history files below work unchanged.
+
+    NOTE: VADER scores are NOT numerically identical to Alpha Vantage's, so
+    every saved entry records which source produced it ("sentiment_source")."""
+    if not FINNHUB_API_KEY:
+        raise RuntimeError("FINNHUB_API_KEY is not set.")
+    try:
+        from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+    except ImportError as err:
+        raise RuntimeError("vaderSentiment is not installed (pip install vaderSentiment).") from err
+    analyzer = SentimentIntensityAnalyzer()
+
+    articles = []
+    seen_ids = set()
+    for category in ("general", "forex"):
+        resp = requests.get(
+            "https://finnhub.io/api/v1/news",
+            params={"category": category, "token": FINNHUB_API_KEY},
+            timeout=20,
+        )
+        resp.raise_for_status()
+        items = resp.json()
+        if not isinstance(items, list):
+            raise RuntimeError(f"Finnhub returned an unexpected response: {str(items)[:200]}")
+        for item in items:
+            key = item.get("id") or item.get("headline")
+            title = (item.get("headline") or "").strip()
+            if not title or key in seen_ids:
+                continue
+            seen_ids.add(key)
+            articles.append({
+                "title": title,
+                "overall_sentiment_score": analyzer.polarity_scores(title)["compound"],
+            })
+    return articles
+
+
+def fetch_news_batch():
+    """Returns (articles, source_name).
+
+    Alpha Vantage's NEWS_SENTIMENT is now a PREMIUM-ONLY endpoint (confirmed
+    by calling it directly with a free key: "This is a premium endpoint"),
+    so Finnhub + VADER is the primary source whenever FINNHUB_API_KEY is set
+    -- this avoids wasting one of the key's 25 daily requests on a call that
+    is certain to be refused (that quota is shared with the oil updater).
+    If no Finnhub key is configured, Alpha Vantage is tried (it will work
+    again automatically if the plan ever allows it)."""
+    if FINNHUB_API_KEY:
+        try:
+            return fetch_finnhub_batch(), "finnhub_vader"
+        except Exception as fh_err:
+            print(f"Finnhub failed: {fh_err}")
+            if not API_KEY:
+                raise
+            print("Trying Alpha Vantage as a backup.")
+    return fetch_alpha_vantage_batch(), "alphavantage"
 
 
 def is_relevant(article, keywords, word_boundary_keywords, exclusions):
@@ -278,13 +345,16 @@ def save_history(history, output_file):
 
 
 def main():
-    articles = fetch_news_batch()
+    articles, source = fetch_news_batch()
+    print(f"News source: {source}")
 
     gold_result = aggregate_sentiment(articles, GOLD_RELEVANT_KEYWORDS, GOLD_WORD_BOUNDARY_KEYWORDS, GOLD_EXCLUSIONS)
     gold_result["timestamp"] = datetime.now(timezone.utc).isoformat()
+    gold_result["sentiment_source"] = source
 
     oil_result = aggregate_sentiment(articles, OIL_RELEVANT_KEYWORDS, OIL_WORD_BOUNDARY_KEYWORDS, OIL_EXCLUSIONS)
     oil_result["timestamp"] = datetime.now(timezone.utc).isoformat()
+    oil_result["sentiment_source"] = source
 
     print(f"Fetched {len(articles)} articles total (one shared fetch for both commodities).")
     print(f"\nGOLD: {gold_result['articles_matched']} gold-relevant.")
