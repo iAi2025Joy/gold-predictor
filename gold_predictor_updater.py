@@ -161,6 +161,10 @@ def add_features(df):
     return df
 
 
+NEWS_MIN_ENTRIES_PER_SOURCE = 20   # ~5 days of 6-hourly runs before a news source is trusted
+NEWS_MAX_AGE_HOURS = 36            # a sentiment reading older than this is treated as stale/unavailable
+
+
 def merge_news_sentiment(price_df, sentiment_file="news_sentiment_history.json"):
     """Attach a news-sentiment feature to each price row, using only
     sentiment readings that existed AT OR BEFORE that price row's
@@ -192,6 +196,37 @@ def merge_news_sentiment(price_df, sentiment_file="news_sentiment_history.json")
         df["news_sentiment_available"] = 0
         return df
 
+    # SOURCE-AWARE SCALING. The news source changed from Alpha Vantage (its
+    # own finance-trained sentiment score) to Finnhub headlines scored with
+    # VADER, a different model with a different scale and spread. Mixing the
+    # two raw would feed the model one feature with two meanings. So each
+    # source's scores are converted to z-scores using ONLY that source's own
+    # history (entries written before this change have no "sentiment_source"
+    # field and are Alpha Vantage). For the old data this is the same
+    # standardisation StandardScaler applies later anyway, so historical
+    # behaviour is unchanged. A source with fewer than
+    # NEWS_MIN_ENTRIES_PER_SOURCE readings is not yet trusted (too few to
+    # know its normal range) and counts as "not available" -- honest neutral
+    # fallback -- until it has built up enough history.
+    if "sentiment_source" not in sent_df.columns:
+        sent_df["sentiment_source"] = "alphavantage"
+    sent_df["sentiment_source"] = sent_df["sentiment_source"].fillna("alphavantage")
+
+    def _zscore_within_source(g):
+        if len(g) < NEWS_MIN_ENTRIES_PER_SOURCE:
+            return pd.Series(np.nan, index=g.index)
+        std = g.std(ddof=0)
+        if not std or std < 1e-9:
+            return pd.Series(0.0, index=g.index)
+        return (g - g.mean()) / std
+
+    sent_df["avg_sentiment_score"] = sent_df.groupby("sentiment_source")["avg_sentiment_score"].transform(_zscore_within_source)
+    sent_df = sent_df.dropna(subset=["avg_sentiment_score"])
+    if len(sent_df) == 0:
+        df["news_sentiment"] = 0.0
+        df["news_sentiment_available"] = 0
+        return df
+
     sent_df["timestamp"] = pd.to_datetime(sent_df["timestamp"]).dt.tz_localize(None)
     sent_df = sent_df.sort_values("timestamp")[["timestamp", "avg_sentiment_score"]]
 
@@ -200,6 +235,10 @@ def merge_news_sentiment(price_df, sentiment_file="news_sentiment_history.json")
         df, sent_df,
         left_on="Date", right_on="timestamp",
         direction="backward",  # only ever look at PAST sentiment readings, never future ones
+        # A reading older than this is stale (e.g. news collection was down)
+        # and must not be carried forward as if it were current -- the row
+        # becomes "not available" instead.
+        tolerance=pd.Timedelta(hours=NEWS_MAX_AGE_HOURS),
     )
     merged["news_sentiment_available"] = merged["avg_sentiment_score"].notna().astype(int)
     merged["news_sentiment"] = merged["avg_sentiment_score"].fillna(0.0)
