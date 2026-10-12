@@ -316,41 +316,21 @@ def add_features(df):
 
 
 def merge_news_sentiment(price_df, sentiment_file="oil_news_sentiment_history.json"):
-    """Same lookahead-safe backward merge_asof pattern already proven correct
-    for gold. Reads from a SEPARATE oil-specific sentiment file (see
-    news_sentiment_fetcher.py's new oil-keyword pass) -- not the gold
-    sentiment file, to keep the two domains honestly separate."""
-    df = price_df.copy()
-    df["Date"] = pd.to_datetime(df["Date"])
+    """Reads the SEPARATE oil-specific sentiment file (see
+    news_sentiment_fetcher.py's oil-keyword pass) -- not the gold file, to
+    keep the two domains honestly separate.
 
-    if not os.path.exists(sentiment_file):
-        df["news_sentiment"] = 0.0
-        df["news_sentiment_available"] = 0
-        return df
-
-    with open(sentiment_file) as f:
-        sentiment_records = json.load(f)
-
-    sent_df = pd.DataFrame(sentiment_records)
-    sent_df = sent_df.dropna(subset=["avg_sentiment_score"])
-    if len(sent_df) == 0:
-        df["news_sentiment"] = 0.0
-        df["news_sentiment_available"] = 0
-        return df
-
-    sent_df["timestamp"] = pd.to_datetime(sent_df["timestamp"]).dt.tz_localize(None)
-    sent_df = sent_df.sort_values("timestamp")[["timestamp", "avg_sentiment_score"]]
-
-    df = df.sort_values("Date")
-    merged = pd.merge_asof(
-        df, sent_df,
-        left_on="Date", right_on="timestamp",
-        direction="backward",
-    )
-    merged["news_sentiment_available"] = merged["avg_sentiment_score"].notna().astype(int)
-    merged["news_sentiment"] = merged["avg_sentiment_score"].fillna(0.0)
-    merged = merged.drop(columns=["timestamp", "avg_sentiment_score"])
-    return merged
+    The merge logic itself now lives in ONE place, gold's
+    merge_news_sentiment (via the gpu import below), so both models get the
+    same fixes: (1) a sentiment reading older than NEWS_MAX_AGE_HOURS is
+    treated as stale/unavailable instead of being carried forward forever,
+    and (2) each news source (Alpha Vantage vs Finnhub+VADER) is scaled
+    against its own history, so two different scoring models never get
+    mixed on one scale. NOTE: until now oil_news_sentiment_history.json was
+    never saved to the repo (the workflow only committed the gold file), so
+    oil's news feature has effectively always been 'unavailable' -- it
+    starts collecting for real from the first run after that was fixed."""
+    return gpu.merge_news_sentiment(price_df, sentiment_file=sentiment_file)
 
 
 FEATURE_COLS = ["wti_ret_1d", "wti_ret_3d", "wti_ret_5d", "wti_ma_ratio", "wti_vol10", "rsi14",
