@@ -207,7 +207,10 @@ def merge_news_sentiment(price_df, sentiment_file="news_sentiment_history.json")
     # behaviour is unchanged. A source with fewer than
     # NEWS_MIN_ENTRIES_PER_SOURCE readings is not yet trusted (too few to
     # know its normal range) and counts as "not available" -- honest neutral
-    # fallback -- until it has built up enough history.
+    # fallback -- until it has built up enough history. (The z-score uses that
+    # source's whole history, so it leaks only the feature's overall scale --
+    # not any reading's content -- into earlier rows; negligible, and the model
+    # standardises features anyway.)
     if "sentiment_source" not in sent_df.columns:
         sent_df["sentiment_source"] = "alphavantage"
     sent_df["sentiment_source"] = sent_df["sentiment_source"].fillna("alphavantage")
