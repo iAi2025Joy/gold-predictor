@@ -1,9 +1,8 @@
 name: Update News Sentiment
 
-# Separate, less-frequent schedule than the hourly price job -- Alpha
-# Vantage's free tier is 25 requests/day TOTAL, and this script uses 1
-# request per run. Every 6 hours = 4 requests/day, leaving comfortable
-# headroom for manual test runs.
+# Separate, less-frequent schedule than the hourly price job. News now comes
+# from Finnhub (free) with VADER scoring, because Alpha Vantage's
+# NEWS_SENTIMENT became a premium-only endpoint. Every 6 hours = 4 runs/day.
 on:
   schedule:
     - cron: '0 */6 * * *'
@@ -25,10 +24,11 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install requests
+        run: pip install requests vaderSentiment
 
       - name: Run news sentiment fetcher
         env:
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
           ALPHAVANTAGE_API_KEY: ${{ secrets.ALPHAVANTAGE_API_KEY }}
         run: python news_sentiment_fetcher.py
 
@@ -36,7 +36,10 @@ jobs:
         run: |
           git config user.name "gold-predictor-bot"
           git config user.email "actions@github.com"
-          git add news_sentiment_history.json
+          # FIXED: the fetcher writes TWO files (gold and oil). Only the gold
+          # file was being committed, so the oil news history was lost after
+          # every run. Both are committed now.
+          git add news_sentiment_history.json oil_news_sentiment_history.json
           git diff --staged --quiet && echo "No changes to commit" || git commit -m "Update news sentiment data [automated]"
 
           # FIXED: this repo has several independent scheduled bots
@@ -47,7 +50,7 @@ jobs:
           # cause of this workflow's ~30% failure rate (run #211 etc.),
           # not a broken fetch (the fetch step itself always succeeded).
           # Each bot only touches its own file (this one only touches
-          # news_sentiment_history.json), so a rebase onto the latest
+          # the two news sentiment files), so a rebase onto the latest
           # remote main applies cleanly with no real conflicts -- retry
           # up to 5 times, re-syncing before each attempt, so a losing
           # race becomes a harmless retry instead of a failed run.
