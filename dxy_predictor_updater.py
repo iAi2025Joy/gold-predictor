@@ -149,29 +149,15 @@ def add_dxy_features(df):
 
 
 def merge_macro_sentiment(df):
-    """Reuse the same lookahead-safe merge_asof pattern as gold's
-    merge_news_sentiment -- documented above as a deliberate reuse of the
-    gold-relevant sentiment score, not a new USD-specific filter."""
-    df = df.copy()
-    if not os.path.exists(SENTIMENT_FILE):
-        df["news_sentiment"] = 0.0
-        df["news_sentiment_available"] = 0
-        return df
-    with open(SENTIMENT_FILE) as f:
-        sentiment_records = json.load(f)
-    sent_df = pd.DataFrame(sentiment_records)
-    sent_df = sent_df.dropna(subset=["avg_sentiment_score"])
-    if len(sent_df) == 0:
-        df["news_sentiment"] = 0.0
-        df["news_sentiment_available"] = 0
-        return df
-    sent_df["timestamp"] = pd.to_datetime(sent_df["timestamp"]).dt.tz_localize(None)
-    sent_df = sent_df.sort_values("timestamp")[["timestamp", "avg_sentiment_score"]]
-    df = df.sort_values("Date")
-    merged = pd.merge_asof(df, sent_df, left_on="Date", right_on="timestamp", direction="backward")
-    merged["news_sentiment_available"] = merged["avg_sentiment_score"].notna().astype(int)
-    merged["news_sentiment"] = merged["avg_sentiment_score"].fillna(0.0)
-    return merged.drop(columns=["timestamp", "avg_sentiment_score"])
+    """Reuses gold's merge_news_sentiment (via the gpu import) on the SAME
+    gold-relevant sentiment file -- a deliberate reuse of the gold-relevant
+    score, not a new USD-specific filter. Keeping the logic in one place
+    means this model gets the same fixes as gold and oil: a sentiment
+    reading older than gpu.NEWS_MAX_AGE_HOURS is treated as stale/
+    unavailable instead of being carried forward forever, and each news
+    source (Alpha Vantage vs Finnhub+VADER) is scaled against its own
+    history so two different scoring models are never mixed on one scale."""
+    return gpu.merge_news_sentiment(df, sentiment_file=SENTIMENT_FILE)
 
 
 FEATURE_COLS = ["dxy_ret_1d", "dxy_ret_3d", "dxy_ret_5d", "dxy_ma_ratio", "dxy_vol10", "rsi14",
