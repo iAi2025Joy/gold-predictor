@@ -1,0 +1,96 @@
+{
+  "updated_at": "2026-10-13T03:44:46.368092+00:00",
+  "coverage_target": 0.7,
+  "assets": {
+    "gold": {
+      "status": "ok",
+      "data_as_of": "2026-10-13T03:30:00+00:00",
+      "base_price": 4204.10009765625,
+      "ranges": {
+        "10min": {
+          "range_low": 4199.2639,
+          "range_high": 4209.4112,
+          "valid_until": "2026-10-13T03:40:00+00:00",
+          "method": "global",
+          "live_coverage": null,
+          "live_n": 0,
+          "live_note": "No scored live ranges yet."
+        },
+        "20min": {
+          "range_low": 4196.6529,
+          "range_high": 4211.4164,
+          "valid_until": "2026-10-13T03:50:00+00:00",
+          "method": "global",
+          "live_coverage": null,
+          "live_n": 0,
+          "live_note": "No scored live ranges yet."
+        },
+        "30min": {
+          "range_low": 4195.4218,
+          "range_high": 4213.0122,
+          "valid_until": "2026-10-13T04:00:00+00:00",
+          "method": "global",
+          "live_coverage": null,
+          "live_n": 0,
+          "live_note": "No scored live ranges yet."
+        },
+        "60min": {
+          "range_low": 4192.1635,
+          "range_high": 4217.2245,
+          "valid_until": "2026-10-13T04:30:00+00:00",
+          "method": "global",
+          "live_coverage": null,
+          "live_n": 0,
+          "live_note": "No scored live ranges yet."
+        }
+      },
+      "data_age_minutes": 14.8
+    },
+    "oil": {
+      "status": "ok",
+      "data_as_of": "2026-10-13T03:30:00+00:00",
+      "base_price": 92.63999938964844,
+      "ranges": {
+        "10min": {
+          "range_low": 92.4805,
+          "range_high": 92.7712,
+          "valid_until": "2026-10-13T03:40:00+00:00",
+          "method": "same_session",
+          "live_coverage": null,
+          "live_n": 0,
+          "live_note": "No scored live ranges yet."
+        },
+        "20min": {
+          "range_low": 92.4336,
+          "range_high": 92.8327,
+          "valid_until": "2026-10-13T03:50:00+00:00",
+          "method": "same_session",
+          "live_coverage": null,
+          "live_n": 0,
+          "live_note": "No scored live ranges yet."
+        },
+        "30min": {
+          "range_low": 92.3817,
+          "range_high": 92.9032,
+          "valid_until": "2026-10-13T04:00:00+00:00",
+          "method": "same_session",
+          "live_coverage": null,
+          "live_n": 0,
+          "live_note": "No scored live ranges yet."
+        },
+        "60min": {
+          "range_low": 92.2358,
+          "range_high": 92.9835,
+          "valid_until": "2026-10-13T04:30:00+00:00",
+          "method": "same_session",
+          "live_coverage": null,
+          "live_n": 0,
+          "live_note": "No scored live ranges yet."
+        }
+      },
+      "data_age_minutes": 14.8
+    }
+  },
+  "method_note": "Calibrated price ranges, NOT direction forecasts: direction cannot be predicted better than chance (strict walk-forward studies). Each range says where the price is likely to be at the horizon; live_coverage is how often real prices actually landed inside these ranges.",
+  "data_note": "Based on Yahoo Finance futures 5-minute bars (GC=F, CL=F), which can be delayed several minutes; a range is valid for its horizon counted from data_as_of."
+}
