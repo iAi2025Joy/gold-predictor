@@ -2,7 +2,7 @@ name: Update Short-Term Ranges
 
 on:
   schedule:
-    - cron: '*/15 * * * *'
+    - cron: '4,19,34,49 * * * *'   # odd minutes: GitHub drops/delays scheduled runs at :00/:15/:30/:45 (peak load)
   workflow_dispatch:
 
 permissions:
