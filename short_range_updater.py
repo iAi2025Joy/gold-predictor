@@ -74,22 +74,24 @@ def make_range(price, H, asset):
     js = np.arange(t - CAL_POINTS - H, t - H + 1)                    # moves fully known at time t
     js = js[js >= 0]
     rH = lp[js + H] - lp[js]
-    z = rH / (vol[js] * np.sqrt(H))
-    z = z[np.isfinite(z)]
+    zall = rH / (vol[js] * np.sqrt(H))
+    ok = np.isfinite(zall)
+    z, rsel = zall[ok], rH[ok]
     method = "global"
     if SESSION_AWARE[asset]:
         sess = np.array([session(price.index[j]) for j in js])
-        zs = (rH / (vol[js] * np.sqrt(H)))[sess == session(price.index[t])]
-        zs = zs[np.isfinite(zs)]
-        if len(zs) >= MIN_Z:
-            z, method = zs, "same_session"
+        m2 = ok & (sess == session(price.index[t]))
+        if int(m2.sum()) >= MIN_Z:
+            z, rsel, method = zall[m2], rH[m2], "same_session"
     if len(z) < MIN_Z:
         return None
     nom = NOMINAL[asset]
     z_lo, z_hi = np.quantile(z, [(1 - nom) / 2, 1 - (1 - nom) / 2])
     base = float(price.iloc[-1]); s = vol[t] * np.sqrt(H)
     return {"range_low": round(base * float(np.exp(z_lo * s)), 4), "range_high": round(base * float(np.exp(z_hi * s)), 4),
-            "base_price": base, "method": method, "n_calibration": int(len(z))}
+            "base_price": base, "method": method, "n_calibration": int(len(z)),
+            # share of recent comparable windows in which price ended HIGHER (descriptive only; studies found no predictive lean)
+            "chance_higher": round(float(np.mean(rsel > 0)), 3)}
 
 
 def score_pending(track, price_by_asset, now):
@@ -172,6 +174,7 @@ def run_once(price_by_asset, track, now):
                               "method": rg["method"], "hit": None})
             entry["ranges"][f"{m}min"] = {"range_low": rg["range_low"], "range_high": rg["range_high"],
                                           "horizon_from_now_min": m, "spans_minutes_of_movement": k * BAR_MIN,
+                                          "chance_higher": rg["chance_higher"], "chance_lower": round(1 - rg["chance_higher"], 3),
                                           "valid_at": (t0 + timedelta(minutes=k * BAR_MIN)).isoformat(),
                                           "method": rg["method"], **live_coverage(track, asset, m)}
         out["assets"][asset] = entry
