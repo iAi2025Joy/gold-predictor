@@ -31,6 +31,8 @@ ASSETS = {"gold": "GC=F", "oil": "CL=F"}
 HORIZONS_MIN = [10, 20, 30, 60]
 BAR_MIN = 5
 TARGET = 0.70
+TARGET90 = 0.90
+NOMINAL90 = {"gold": 0.90, "oil": 0.92}     # oil calibrated slightly higher, same reason as the 70% band
 # nominal coverage actually requested from the quantiles (oil measured ~2-4 pts under target)
 NOMINAL = {"gold": 0.70, "oil": 0.72}
 SESSION_AWARE = {"gold": False, "oil": True}
@@ -87,8 +89,11 @@ def make_range(price, H, asset):
         return None
     nom = NOMINAL[asset]
     z_lo, z_hi = np.quantile(z, [(1 - nom) / 2, 1 - (1 - nom) / 2])
+    n90 = NOMINAL90[asset]
+    z_lo9, z_hi9 = np.quantile(z, [(1 - n90) / 2, 1 - (1 - n90) / 2])
     base = float(price.iloc[-1]); s = vol[t] * np.sqrt(H)
     return {"range_low": round(base * float(np.exp(z_lo * s)), 4), "range_high": round(base * float(np.exp(z_hi * s)), 4),
+            "range_low90": round(base * float(np.exp(z_lo9 * s)), 4), "range_high90": round(base * float(np.exp(z_hi9 * s)), 4),
             "base_price": base, "method": method, "n_calibration": int(len(z)),
             # share of recent comparable windows in which price ended HIGHER (descriptive only; studies found no predictive lean)
             "chance_higher": round(float(np.mean(rsel > 0)), 3)}
@@ -116,11 +121,13 @@ def score_pending(track, price_by_asset, now):
                 continue
         e["actual_price"] = actual
         e["hit"] = bool(e["range_low"] <= actual <= e["range_high"])
+        if e.get("range_low90") is not None:
+            e["hit90"] = bool(e["range_low90"] <= actual <= e["range_high90"])
     return track
 
 
-def live_coverage(track, asset, horizon):
-    h = [e["hit"] for e in track if e["asset"] == asset and e["horizon_min"] == horizon and e.get("hit") is not None][-LIVE_WINDOW:]
+def live_coverage(track, asset, horizon, key="hit", target=TARGET):
+    h = [e[key] for e in track if e["asset"] == asset and e["horizon_min"] == horizon and e.get(key) is not None][-LIVE_WINDOW:]
     n = len(h)
     if n == 0:
         return {"live_coverage": None, "live_n": 0, "live_note": "No scored live ranges yet."}
@@ -128,8 +135,8 @@ def live_coverage(track, asset, horizon):
     if n < 30:
         note = f"{k}/{n} scored so far -- too few to judge."
     else:
-        p = stats.binomtest(k, n, TARGET).pvalue
-        note = f"{c:.1%} of the last {n} ranges contained the real price (target {TARGET:.0%}). " + \
+        p = stats.binomtest(k, n, target).pvalue
+        note = f"{c:.1%} of the last {n} ranges contained the real price (target {target:.0%}). " + \
                ("Consistent with target." if p >= 0.01 else "Meaningfully OFF target -- treat with caution.")
     return {"live_coverage": round(c, 4), "live_n": n, "live_note": note}
 
@@ -171,8 +178,12 @@ def run_once(price_by_asset, track, now):
                 track.append({"asset": asset, "horizon_min": m, "base_time": base_time.isoformat(),
                               "target_time": tt.isoformat(), "base_price": rg["base_price"],
                               "range_low": rg["range_low"], "range_high": rg["range_high"],
-                              "method": rg["method"], "hit": None})
+                              "range_low90": rg["range_low90"], "range_high90": rg["range_high90"],
+                              "method": rg["method"], "hit": None, "hit90": None})
+            l90 = live_coverage(track, asset, m, "hit90", TARGET90)
             entry["ranges"][f"{m}min"] = {"range_low": rg["range_low"], "range_high": rg["range_high"],
+                                          "range_low90": rg["range_low90"], "range_high90": rg["range_high90"],
+                                          "live_coverage90": l90["live_coverage"], "live_n90": l90["live_n"], "live_note90": l90["live_note"],
                                           "horizon_from_now_min": m, "spans_minutes_of_movement": k * BAR_MIN,
                                           "chance_higher": rg["chance_higher"], "chance_lower": round(1 - rg["chance_higher"], 3),
                                           "valid_at": (t0 + timedelta(minutes=k * BAR_MIN)).isoformat(),
