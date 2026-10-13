@@ -1221,6 +1221,121 @@ def check_cross_asset_consistency(pred_class, asset_name="Gold"):
 
 
 
+# ============================================================
+# CALIBRATED PRICE RANGE (the honest "70%" this project can truly deliver)
+# ------------------------------------------------------------
+# Direction cannot be predicted better than chance (strict walk-forward
+# studies in research_walkforward.py / research_intraday.py). A PRICE RANGE
+# can be calibrated: "70% of the time the next price lands inside this
+# range". Method: recent volatility (per sqrt-time-unit) x the empirical
+# 15th/85th percentile of the last ~250 standardized moves. Back-tested on
+# real gold history it covered 70.3% at a 70% target (80.6% at 80%).
+# Every range is saved and scored live, so the real hit rate is public.
+# ============================================================
+RANGE_COVERAGE = 0.70
+RANGE_WINDOW = 200            # live hit-rate is computed over the last N scored ranges
+
+
+def compute_calibrated_range(df, price_col, coverage=RANGE_COVERAGE, time_scaled=True,
+                             horizon_label="next hour", min_gap_hours=0.5,
+                             vol_window=30, lookback=250, min_obs=60):
+    """Return a dict with a `coverage`-probability price range for ONE horizon unit
+    (1 hour if time_scaled, else 1 step), or None if there is not enough data."""
+    d = df[["Date", price_col]].dropna().sort_values("Date").reset_index(drop=True)
+    if time_scaled:
+        keep, last_t = [], None          # drop near-duplicate timestamps (manual/double runs)
+        for i, t in enumerate(d["Date"]):
+            if last_t is None or (t - last_t).total_seconds() / 3600.0 >= min_gap_hours:
+                keep.append(i); last_t = t
+        d = d.iloc[keep].reset_index(drop=True)
+        dt = d["Date"].diff().dt.total_seconds() / 3600.0
+    else:
+        dt = pd.Series(1.0, index=d.index)
+    r = np.log(d[price_col]).diff() / np.sqrt(dt)           # return per sqrt(time unit)
+    vol_now = r.rolling(vol_window).std()
+    z = (r / vol_now.shift(1)).replace([np.inf, -np.inf], np.nan).dropna().iloc[-lookback:]
+    v = vol_now.iloc[-1]
+    if len(z) < min_obs or not np.isfinite(v) or v <= 0:
+        return None
+    z_lo, z_hi = np.quantile(z, [(1 - coverage) / 2, 1 - (1 - coverage) / 2])
+    price = float(d[price_col].iloc[-1])
+    return {
+        "coverage_target": coverage,
+        "horizon_label": horizon_label,
+        "range_low": round(price * float(np.exp(z_lo * v)), 4),
+        "range_high": round(price * float(np.exp(z_hi * v)), 4),
+        "base_price": price,
+        "vol_per_unit": float(v), "z_lo": float(z_lo), "z_hi": float(z_hi),
+        "time_scaled": bool(time_scaled), "n_calibration": int(len(z)),
+        "note": (f"A calibrated {int(coverage*100)}% price range for the {horizon_label}: historically the next price "
+                 f"landed inside a range built this way about {int(coverage*100)}% of the time. It says how far price "
+                 f"may move, NOT which direction. Live hit rate is tracked in range_live_coverage."),
+    }
+
+
+def attach_range_to_latest_entry(track_record, calibrated_range, timestamp):
+    """Store the range on the entry record_new_prediction just appended, so it can be scored."""
+    if not calibrated_range or not track_record:
+        return track_record
+    e = track_record[-1]
+    if e.get("predicted_at") == timestamp.isoformat() and not e.get("resolved"):
+        e["range"] = {k: calibrated_range[k] for k in
+                      ("coverage_target", "range_low", "range_high", "base_price", "vol_per_unit",
+                       "z_lo", "z_hi", "time_scaled")}
+        e["range_hit"] = None
+    return track_record
+
+
+def score_range_hits(track_record, actual_price, actual_timestamp):
+    """Score ranges of entries resolved in THIS run. The range is rescaled to the REAL elapsed time
+    (a delayed run gets a proportionally wider range), so scheduling jitter can't flatter or hurt it."""
+    for e in track_record:
+        rg = e.get("range")
+        if not rg or e.get("range_hit") is not None or not e.get("resolved"):
+            continue
+        if e.get("resolved_at") != actual_timestamp.isoformat():
+            continue
+        if rg.get("time_scaled"):
+            el = (pd.Timestamp(e["resolved_at"]) - pd.Timestamp(e["predicted_at"])).total_seconds() / 3600.0
+            if el <= 0:
+                continue
+        else:
+            el = 1.0
+        lo = rg["base_price"] * float(np.exp(rg["z_lo"] * rg["vol_per_unit"] * np.sqrt(el)))
+        hi = rg["base_price"] * float(np.exp(rg["z_hi"] * rg["vol_per_unit"] * np.sqrt(el)))
+        e["range_hit"] = bool(lo <= actual_price <= hi)
+        e["range_scored_low"], e["range_scored_high"], e["range_elapsed_units"] = round(lo, 4), round(hi, 4), round(el, 3)
+    return track_record
+
+
+def compute_range_coverage(track_record, window=RANGE_WINDOW, target=RANGE_COVERAGE):
+    scored = [e["range_hit"] for e in track_record if e.get("range_hit") is not None][-window:]
+    n = len(scored)
+    if n == 0:
+        return {"range_live_coverage": None, "range_live_n": 0, "range_live_note":
+                "No scored live ranges yet -- this fills in as the job runs."}
+    hits = int(sum(scored)); cov = hits / n
+    if n < 30:
+        note = f"{hits}/{n} live ranges contained the next price so far -- too few to judge calibration yet."
+    else:
+        p = stats.binomtest(hits, n, target).pvalue
+        note = (f"Over the last {n} scored live ranges, {cov:.1%} contained the next price (target {target:.0%}). "
+                + ("This is consistent with the target." if p >= 0.01 else
+                   "This is meaningfully OFF target -- treat the range with caution."))
+    return {"range_live_coverage": cov, "range_live_n": n, "range_live_note": note}
+
+
+def _range_phrase(result):
+    cr = result.get("calibrated_range")
+    if not cr:
+        return "The expected price range is the more reliable guide."
+    txt = (f"Calibrated {int(cr['coverage_target']*100)}% range for the {cr['horizon_label']}: "
+           f"{cr['range_low']:,.2f} to {cr['range_high']:,.2f}.")
+    if result.get("range_live_coverage") is not None and result.get("range_live_n", 0) >= 30:
+        txt += f" Live hit rate: {result['range_live_coverage']:.0%} over {result['range_live_n']} calls."
+    return txt
+
+
 def add_edge_verdict(result, asset_name="Gold"):
     """Honest, plain-language verdict on whether the direction call has a PROVEN edge.
 
@@ -1250,7 +1365,7 @@ def add_edge_verdict(result, asset_name="Gold"):
         result["directional_signal_summary"] = (
             f"{asset_name}: NO PROVEN EDGE. Treat the direction as a coin flip, not a forecast. "
             f"Raw model lean: {pred} ({score} -- an uncalibrated model output, NOT a real probability).{live_txt} "
-            f"The expected price range is the more reliable guide.")
+            f"{_range_phrase(result)}")
     result["directional_edge_research_note"] = (
         "A walk-forward study over 2000-2026 daily data (price + real yield, dollar, VIX, Fed funds, yield slope; "
         "1/5/10/20-day horizons) found no statistically credible, stable directional edge (best ~54-56%, p>0.1).")
@@ -1267,6 +1382,7 @@ def main():
     # fetched price, before we compute a new one -- this is the actual
     # live feedback loop: check what we said last time against reality.
     track_record = resolve_pending_predictions(track_record, price, timestamp)
+    track_record = score_range_hits(track_record, price, timestamp)
 
     live_row = pd.DataFrame([{"Date": pd.Timestamp(timestamp).tz_localize(None), "GLD": price}])
     history_df = pd.concat([history_df, live_row], ignore_index=True)
@@ -1277,7 +1393,10 @@ def main():
     result["data_points_used"] = len(history_df)
 
     # Log THIS run's prediction as pending, to be resolved next run.
+    result["calibrated_range"] = compute_calibrated_range(history_df, "GLD", time_scaled=True, horizon_label="next hour")
     track_record = record_new_prediction(track_record, result, price, timestamp)
+    attach_range_to_latest_entry(track_record, result["calibrated_range"], timestamp)
+    result.update(compute_range_coverage(track_record))
 
     rolling_stats = compute_rolling_live_accuracy(track_record)
     result.update(rolling_stats)

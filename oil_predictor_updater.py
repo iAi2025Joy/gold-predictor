@@ -734,13 +734,17 @@ def main():
     # fetched price, before computing a new one -- the actual live
     # feedback loop: check what was said last time against reality.
     track_record = resolve_pending_predictions(track_record, current_price, current_timestamp)
+    track_record = gpu.score_range_hits(track_record, current_price, current_timestamp)
 
     result = run_prediction_pipeline(history_df)
     result["updated_at"] = datetime.now(timezone.utc).isoformat()
     result["data_points_used"] = len(history_df)
     result["current_price_source"] = "live_oilpriceapi" if live_price is not None else "alpha_vantage_wti_snapshot"
 
+    result["calibrated_range"] = gpu.compute_calibrated_range(history_df, "WTI", time_scaled=False, horizon_label="next trading day")
     track_record = record_new_prediction(track_record, result, current_price, current_timestamp)
+    gpu.attach_range_to_latest_entry(track_record, result["calibrated_range"], current_timestamp)
+    result.update(gpu.compute_range_coverage(track_record))
     rolling_stats = compute_rolling_live_accuracy(track_record)
     result.update(rolling_stats)
 
