@@ -1,7 +1,8 @@
 name: Record Live Gold Ticks
 
 # Starts hourly (GitHub may skip some starts -- gaps are fine), then records the live gold price every 2 minutes
-# for ~52 minutes. Public repo = free minutes.
+# for ~52 minutes, and every 10 minutes also records + scores an up/down call (direction_record.py).
+# Public repo = free minutes.
 on:
   schedule:
     - cron: '7 * * * *'
@@ -23,7 +24,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install requests
+      - run: pip install requests pandas numpy scipy yfinance
       - name: Record ticks
         env:
           GOLDPRICEZ_API_KEY: ${{ secrets.GOLDPRICEZ_API_KEY }}
