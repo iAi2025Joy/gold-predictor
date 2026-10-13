@@ -140,23 +140,30 @@ def run_once(price_by_asset, track, now):
                            "(strict walk-forward studies). Each range says where the price is likely to be at the horizon; "
                            "live_coverage is how often real prices actually landed inside these ranges."),
            "data_note": "Based on Yahoo Finance futures 5-minute bars (GC=F, CL=F), which can be delayed several minutes; "
-                        "a range is valid for its horizon counted from data_as_of."}
+                        "because the newest price is already several minutes old, each range covers the delay PLUS the horizon "
+                        "(see spans_minutes_of_movement) so that it is honest about 'minutes from now'."}
     for asset, price in price_by_asset.items():
         if price is None or not len(price):
             out["assets"][asset] = {"status": "no_data"}; continue
         base_time = price.index[-1]
-        entry = {"status": "ok", "data_as_of": base_time.isoformat(), "base_price": float(price.iloc[-1]), "ranges": {}}
-        stale_min = (now - base_time).total_seconds() / 60.0
-        entry["data_age_minutes"] = round(stale_min, 1)
-        if stale_min > 30:
-            entry["status"] = "stale"; entry["note"] = "Market data is more than 30 minutes old (market closed or feed delayed); ranges not issued."
+        t0 = base_time + timedelta(minutes=BAR_MIN)                      # the base bar's CLOSE time = when that price was real
+        age_min = (now - t0).total_seconds() / 60.0                      # how old the newest price is (Yahoo futures are delayed ~10-15 min)
+        entry = {"status": "ok", "data_as_of": t0.isoformat(), "base_price": float(price.iloc[-1]),
+                 "data_age_minutes": round(age_min, 1), "ranges": {}}
+        if age_min > 40:
+            entry["status"] = "stale"
+            entry["note"] = "Market data is more than 40 minutes old (market closed or feed delayed); ranges not issued."
             out["assets"][asset] = entry; continue
         for m in HORIZONS_MIN:
-            H = m // BAR_MIN
-            rg = make_range(price, H, asset)
+            # The price we hold is already `age_min` old, so a range for "m minutes from NOW" must span
+            # age + m minutes of price movement. We round up to whole 5-minute bars (never narrower than needed).
+            k = max(1, int(np.ceil((age_min + m) / BAR_MIN)))
+            if k > 24:
+                entry["ranges"][f"{m}min"] = {"status": "data_too_old"}; continue
+            rg = make_range(price, k, asset)
             if rg is None:
                 entry["ranges"][f"{m}min"] = {"status": "insufficient_data"}; continue
-            tt = base_time + timedelta(minutes=m)
+            tt = base_time + timedelta(minutes=k * BAR_MIN)               # bar whose close is the scoring target
             key = (asset, m, base_time.isoformat())
             if key not in existing:
                 track.append({"asset": asset, "horizon_min": m, "base_time": base_time.isoformat(),
@@ -164,7 +171,9 @@ def run_once(price_by_asset, track, now):
                               "range_low": rg["range_low"], "range_high": rg["range_high"],
                               "method": rg["method"], "hit": None})
             entry["ranges"][f"{m}min"] = {"range_low": rg["range_low"], "range_high": rg["range_high"],
-                                          "valid_until": tt.isoformat(), "method": rg["method"], **live_coverage(track, asset, m)}
+                                          "horizon_from_now_min": m, "spans_minutes_of_movement": k * BAR_MIN,
+                                          "valid_at": (t0 + timedelta(minutes=k * BAR_MIN)).isoformat(),
+                                          "method": rg["method"], **live_coverage(track, asset, m)}
         out["assets"][asset] = entry
     return out, track[-MAX_TRACK:]
 
@@ -195,7 +204,7 @@ def selftest():
     full = {a: pd.Series(100 * np.exp(np.cumsum(rng.standard_t(5, n) * vol)), index=idx) for a in ASSETS}
     track = []
     for end in range(1000, n, 3):                              # a run every 15 minutes
-        now = idx[end] + timedelta(minutes=6)
+        now = idx[end] + timedelta(minutes=15)       # emulate Yahoo's ~10 min delay + bar length
         pb = {a: s.iloc[:end + 1] for a, s in full.items()}
         out, track = run_once(pb, track, now.to_pydatetime())
     for a in ASSETS:
