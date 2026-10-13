@@ -42,6 +42,9 @@ def git_push():
     run("git", "config", "user.name", "gold-predictor-bot")
     run("git", "config", "user.email", "actions@github.com")
     run("git", "add", OUT)
+    for f in ("direction_track_record.json", "direction_live_record.json"):
+        if os.path.exists(f):
+            run("git", "add", f)
     if run("git", "diff", "--staged", "--quiet").returncode == 0:
         return
     run("git", "commit", "-m", "Update live gold ticks [automated]")
@@ -51,14 +54,26 @@ def git_push():
         run("git", "pull", "--rebase", "-X", "theirs", "origin", "main")
         time.sleep(2 + i)
 
+def direction_cycle():
+    """Every ~10 minutes: score due up/down calls and make a new one (see direction_record.py). Never breaks tick recording."""
+    try:
+        import direction_record
+        direction_record.run_once()
+    except Exception as e:
+        print("direction cycle failed:", e)
+
 def main():
     if not API_KEY:
         raise SystemExit("GOLDPRICEZ_API_KEY is not set.")
     d = load()
     end = time.time() + RUN_MINUTES * 60
     last_commit = time.time()
+    next_dir = 0.0
     while time.time() < end:
         t0 = time.time()
+        if t0 >= next_dir:
+            direction_cycle()
+            next_dir = t0 + 600
         try:
             p = fetch()
             d["ticks"].append({"t": datetime.now(timezone.utc).isoformat(timespec="seconds"), "p": round(p, 2)})
