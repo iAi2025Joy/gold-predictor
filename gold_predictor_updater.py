@@ -1220,6 +1220,42 @@ def check_cross_asset_consistency(pred_class, asset_name="Gold"):
     }
 
 
+
+def add_edge_verdict(result, asset_name="Gold"):
+    """Honest, plain-language verdict on whether the direction call has a PROVEN edge.
+
+    Added after a strict walk-forward study (research_walkforward.py, 2000-2026 data)
+    found NO statistically credible directional edge for gold (best ~54-56% accuracy,
+    never significant, unstable across years). Until BOTH the held-out backtest and
+    the live track record show a significant edge, the direction is presented as a
+    weak lean, not a forecast. Existing fields are unchanged (nothing downstream breaks);
+    these are ADDED so UIs/chatbots can show the honest framing."""
+    pred = result.get("prediction")
+    if pred not in ("up", "down"):
+        result["directional_edge_status"] = "insufficient_data"
+        result["directional_signal_summary"] = f"{asset_name}: not enough data for a direction call yet."
+        return result
+    backtest_ok = bool(result.get("is_statistically_significant"))
+    live_ok = bool(result.get("rolling_accuracy_is_significant")) and (result.get("rolling_direction_accuracy") or 0) > 0.5
+    prob_up = result.get("prediction_probability_up")
+    score = f"{round(prob_up * 100)}% model score" if isinstance(prob_up, (int, float)) else "no score"
+    if backtest_ok and live_ok:
+        result["directional_edge_status"] = "supported"
+        result["directional_signal_summary"] = (
+            f"{asset_name}: model leans {pred} ({score}); backtest and live record both show a statistically significant edge.")
+    else:
+        result["directional_edge_status"] = "unproven"
+        live_acc = result.get("rolling_direction_accuracy")
+        live_txt = f" Live record: {round(live_acc * 100)}% over {result.get('rolling_predictions_tracked')} calls." if live_acc is not None else ""
+        result["directional_signal_summary"] = (
+            f"{asset_name}: NO PROVEN EDGE. Treat the direction as a coin flip, not a forecast. "
+            f"Raw model lean: {pred} ({score} -- an uncalibrated model output, NOT a real probability).{live_txt} "
+            f"The expected price range is the more reliable guide.")
+    result["directional_edge_research_note"] = (
+        "A walk-forward study over 2000-2026 daily data (price + real yield, dollar, VIX, Fed funds, yield slope; "
+        "1/5/10/20-day horizons) found no statistically credible, stable directional edge (best ~54-56%, p>0.1).")
+    return result
+
 def main():
     history_df = load_history()
     track_record = load_track_record()
@@ -1251,6 +1287,8 @@ def main():
     if result.get("prediction") in ("up", "down"):
         cross_asset_stats = check_cross_asset_consistency(result["prediction"])
         result.update(cross_asset_stats)
+
+    add_edge_verdict(result, "Gold")
 
     model_artifacts = result.pop("_model_artifacts", None)
 

@@ -753,6 +753,7 @@ def main():
     # Popped BEFORE printing (matching gold's exact order) -- otherwise
     # the full tree-structure dump (potentially thousands of numbers)
     # would flood the workflow log.
+    gpu.add_edge_verdict(result, "Oil")
     model_artifacts = result.pop("_model_artifacts", None)
 
     print("Prediction result:")
