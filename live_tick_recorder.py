@@ -15,7 +15,7 @@ OUT = "live_gold_ticks.json"
 RUN_MINUTES = float(os.environ.get("RUN_MINUTES", "52"))
 EVERY_SEC = int(os.environ.get("EVERY_SEC", "120"))
 COMMIT_EVERY_SEC = 600
-KEEP_DAYS = 5
+KEEP_DAYS = 30
 
 def fetch():
     resp = requests.get(URL, headers={"X-API-KEY": API_KEY}, timeout=15)
