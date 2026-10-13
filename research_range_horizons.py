@@ -39,8 +39,9 @@ def session(ts):
     h = ts.hour
     return "asia_00-07UTC" if h < 7 else ("europe_07-13UTC" if h < 13 else "us_13-24UTC")
 
-def evaluate(price, H):
+def evaluate(price, H, session_aware=False):
     lp = np.log(price.values); r1 = np.diff(lp, prepend=np.nan)
+    sess_all = np.array([session(ts) for ts in price.index])
     vol = pd.Series(r1).rolling(VOL_BARS).std().values
     rH = lp[H:] - lp[:-H]                      # move over H bars starting at i -> index i
     n = len(lp); hits, sess = [], []
@@ -49,8 +50,13 @@ def evaluate(price, H):
         js = np.arange(t - CAL_POINTS - H, t - H + 1)
         v = vol[js]
         z = rH[js] / (v * np.sqrt(H))
+        if session_aware:                      # use only past moves from the SAME trading session as now
+            same = sess_all[js] == sess_all[t]
+            zs = z[same]; zs = zs[np.isfinite(zs)]
+            if len(zs) >= 150:
+                z = zs
         z = z[np.isfinite(z)]
-        if len(z) < 200 or not np.isfinite(vol[t]) or vol[t] <= 0:
+        if len(z) < 150 or not np.isfinite(vol[t]) or vol[t] <= 0:
             continue
         lo, hi = np.quantile(z, [(1 - COVERAGE) / 2, 1 - (1 - COVERAGE) / 2])
         move = lp[t + H] - lp[t]
@@ -66,19 +72,21 @@ def main():
         print(f"\n{name} ({tk}): {len(price)} bars {price.index.min()} -> {price.index.max()}")
         for m in HORIZONS_MIN:
             H = m // 5
-            hits, sess = evaluate(price, H)
-            if len(hits) < 100:
-                print(f"  {m:3d} min: too little data"); continue
-            cov = hits.mean(); k = int(hits.sum()); n = len(hits)
-            p = stats.binomtest(k, n, COVERAGE).pvalue
-            by = {s: round(float(hits[sess == s].mean()), 3) for s in np.unique(sess) if (sess == s).sum() >= 50}
-            ok = abs(cov - COVERAGE) <= 0.05 and p > 0.01
-            report["results"][f"{name}|{m}min"] = {"n": n, "coverage": float(cov), "p_vs_70": float(p),
-                                                   "by_session": by, "calibrated": bool(ok)}
-            print(f"  {m:3d} min: coverage={cov:.3f} n={n} p={p:.3f} {'OK' if ok else 'OFF-TARGET'}  sessions={by}")
+            for variant, sa in (("global", False), ("session_aware", True)):
+                hits, sess = evaluate(price, H, sa)
+                if len(hits) < 100:
+                    print(f"  {m:3d} min {variant}: too little data"); continue
+                cov = hits.mean(); k = int(hits.sum()); n = len(hits)
+                p = stats.binomtest(k, n, COVERAGE).pvalue
+                by = {str(s): round(float(hits[sess == s].mean()), 3) for s in np.unique(sess) if (sess == s).sum() >= 50}
+                worst = max(abs(v - COVERAGE) for v in by.values()) if by else 1
+                ok = abs(cov - COVERAGE) <= 0.05 and p > 0.01 and worst <= 0.06   # every session within 6 pts
+                report["results"][f"{name}|{m}min|{variant}"] = {"n": n, "coverage": float(cov), "p_vs_70": float(p),
+                                                       "by_session": by, "worst_session_gap": float(worst), "calibrated": bool(ok)}
+                print(f"  {m:3d} min {variant:13s}: coverage={cov:.3f} n={n} p={p:.3f} worst_session_gap={worst:.3f} {'OK' if ok else 'OFF-TARGET'}  sessions={by}")
     good = [k for k, v in report["results"].items() if v["calibrated"]]
     bad = [k for k, v in report["results"].items() if not v["calibrated"]]
-    report["verdict"] = f"Calibrated (70% +/-5pts): {good or 'none'}. Off-target: {bad or 'none'}."
+    report["verdict"] = f"Calibrated (70% +/-5pts overall, every session within 6pts): {good or 'none'}. Off-target: {bad or 'none'}."
     print("\nVERDICT:", report["verdict"])
     json.dump(report, open("research_range_horizons_report.json", "w"), indent=2)
 
