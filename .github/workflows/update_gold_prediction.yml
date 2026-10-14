@@ -49,7 +49,7 @@ jobs:
           git config user.name "gold-predictor-bot"
           git config user.email "actions@github.com"
           git add gold_prediction_latest.json gold_price_history.json prediction_track_record.json
-          git add short_range_latest.json short_range_track_record.json 2>/dev/null || true
+          git add short_range_latest.json short_range_track_record.json calibration_state.json 2>/dev/null || true
           git diff --staged --quiet && echo "No changes to commit" || git commit -m "Update gold prediction data [automated]"
 
           # FIXED same session as the news-sentiment fix: gold runs

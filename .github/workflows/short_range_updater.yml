@@ -27,7 +27,7 @@ jobs:
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          git add short_range_latest.json short_range_track_record.json
+          git add short_range_latest.json short_range_track_record.json calibration_state.json
           git commit -m "Update short-term ranges" || echo "nothing to commit"
           git pull --rebase origin main || true
           git push || (sleep 5 && git pull --rebase origin main && git push)
