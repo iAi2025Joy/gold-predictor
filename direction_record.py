@@ -36,11 +36,30 @@ MAX_BAR_AGE_MIN = 60          # no new call if the newest bar is older than this
 def _floor5(ts):
     return ts.replace(minute=ts.minute - ts.minute % 5, second=0, microsecond=0)
 
-RULES = ["analog", "momentum_15m", "reversal_15m", "momentum_60m", "reversal_60m", "follow_recent_outcomes"]
+RULES = ["analog", "momentum_15m", "reversal_15m", "momentum_60m", "reversal_60m", "follow_recent_outcomes",
+         "news_follow", "news_fade"]
+NEWS_FILE = "market_headlines.json"
+NEWS_WINDOW_H = 6          # headlines newer than this count
+NEWS_DEADBAND = 0.15       # |average sentiment| below this = no opinion
+
+
+def news_signal(asset, now):
+    """Average VADER sentiment of this asset's headlines from the last 6 h (from market_headlines.json), or None.
+    Returned as {score, n}. Used ONLY as two shadow rules that are scored live; it moves no price or range."""
+    try:
+        d = json.load(open(NEWS_FILE))
+        sc = []
+        for h in d.get(asset, []):
+            t = datetime.fromisoformat(h["published"]).astimezone(timezone.utc)
+            if timedelta(0) <= now - t <= timedelta(hours=NEWS_WINDOW_H) and h.get("sentiment") is not None:
+                sc.append(float(h["sentiment"]))
+        return {"score": round(sum(sc) / len(sc), 4), "n": len(sc)} if sc else None
+    except Exception:
+        return None
 MIN_VALIDATE_N = 300
 
 
-def shadow_calls(price, chance_higher, recent_outcomes):
+def shadow_calls(price, chance_higher, recent_outcomes, news=None):
     """Every candidate rule's UP/DOWN call from data available now (None when a rule has no opinion)."""
     c = price.values.astype(float)
     def sgn(x):
@@ -51,11 +70,15 @@ def shadow_calls(price, chance_higher, recent_outcomes):
     if recent_outcomes and len(recent_outcomes) >= 20:
         ups = sum(1 for o in recent_outcomes[-30:] if o == "up")
         rec = "up" if ups * 2 > len(recent_outcomes[-30:]) else ("down" if ups * 2 < len(recent_outcomes[-30:]) else None)
+    nf = None
+    if news and news.get("n", 0) >= 1 and abs(news["score"]) >= NEWS_DEADBAND:
+        nf = "up" if news["score"] > 0 else "down"
     return {"analog": "up" if chance_higher >= 0.5 else "down", "momentum_15m": m15, "reversal_15m": flip[m15],
-            "momentum_60m": m60, "reversal_60m": flip[m60], "follow_recent_outcomes": rec}
+            "momentum_60m": m60, "reversal_60m": flip[m60], "follow_recent_outcomes": rec,
+            "news_follow": nf, "news_fade": flip[nf]}
 
 
-def make_call(asset, price, now, make_range, recent_outcomes=None):
+def make_call(asset, price, now, make_range, recent_outcomes=None, news=None):
     """price: completed 5-minute bars (UTC index, close prices). Returns a pending record or None."""
     if price is None or len(price) < 700:
         return None
@@ -71,7 +94,7 @@ def make_call(asset, price, now, make_range, recent_outcomes=None):
             "base_bar": base_bar.isoformat(), "target_bar": target_bar.isoformat(),
             "predicted": "up" if m["chance_higher"] >= 0.5 else "down",
             "chance_up": m["chance_higher"], "status": "pending",
-            "shadow": shadow_calls(price, m["chance_higher"], recent_outcomes)}
+            "news": news, "shadow": shadow_calls(price, m["chance_higher"], recent_outcomes, news)}
 
 def score(records, prices, now):
     for r in records:
@@ -182,7 +205,7 @@ def cycle(prices, now, make_range, records=None):
     for asset, p in prices.items():
         recent = [r["outcome"] for r in sorted((x for x in records if x["asset"] == asset and x["status"] == "scored"),
                                                key=lambda x: x["target_bar"])]
-        c = make_call(asset, p, now, make_range, recent_outcomes=recent)
+        c = make_call(asset, p, now, make_range, recent_outcomes=recent, news=news_signal(asset, now))
         if c and c["id"] not in have:
             records.append(c)
     return prune(records)
