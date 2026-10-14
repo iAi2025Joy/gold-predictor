@@ -1,0 +1,35 @@
+name: Update Event Calendar
+
+# Downloads the week's scheduled economic events (central banks, US jobs/inflation data, oil inventories).
+# Runs every 6 hours; the live recorder also refreshes it, so it stays current even when GitHub skips a start.
+on:
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  calendar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests
+      - run: python event_calendar_fetcher.py selftest
+      - run: python event_calendar_fetcher.py
+      - name: Commit
+        run: |
+          git config user.name "gold-predictor-bot"
+          git config user.email "actions@github.com"
+          git add event_calendar.json
+          git diff --staged --quiet && echo "No changes" || git commit -m "Update event calendar [automated]"
+          for i in 1 2 3 4 5; do
+            git push && break
+            git pull --rebase origin main
+            sleep $((RANDOM % 5 + 1))
+          done

@@ -39,7 +39,7 @@ jobs:
           # FIXED: the fetcher writes TWO files (gold and oil). Only the gold
           # file was being committed, so the oil news history was lost after
           # every run. Both are committed now.
-          git add news_sentiment_history.json oil_news_sentiment_history.json
+          git add news_sentiment_history.json oil_news_sentiment_history.json market_headlines.json
           git diff --staged --quiet && echo "No changes to commit" || git commit -m "Update news sentiment data [automated]"
 
           # FIXED: this repo has several independent scheduled bots
