@@ -85,7 +85,38 @@ def event_moment(price):
     return None
 
 
-def make_range(price, H, asset, event_widen=True):
+EVENT_FILE = "event_calendar.json"
+CALENDAR_WIDEN = {"high": 1.25, "medium": 1.10}   # high factor = same as measured at 8:30/9:30/10:00 NY; medium is a cautious half-step
+CALENDAR_MAX_AGE_HOURS = 24 * 9
+
+
+def load_events(now):
+    """Scheduled economic events [(utc datetime, 'high'|'medium', title)] from event_calendar.json; [] if missing/too old."""
+    try:
+        d = json.load(open(EVENT_FILE))
+        upd = datetime.fromisoformat(d["updated_at"].replace("Z", "+00:00"))
+        if (now - upd).total_seconds() > CALENDAR_MAX_AGE_HOURS * 3600:
+            return []
+        return [(datetime.fromisoformat(e["time_utc"].replace("Z", "+00:00")), e["impact"], e["title"]) for e in d.get("events", [])]
+    except Exception:
+        return []
+
+
+def calendar_factor(price, H, events):
+    """Widening factor + label for scheduled events that fall inside the span this range covers
+    (from 10 minutes before the base price's time to the target time)."""
+    if not events:
+        return 1.0, None
+    start = price.index[-1].to_pydatetime() - timedelta(minutes=10)
+    end = price.index[-1].to_pydatetime() + timedelta(minutes=BAR_MIN * (H + 1))
+    best, label = 1.0, None
+    for t, impact, title in events:
+        if start <= t <= end and CALENDAR_WIDEN.get(impact, 1.0) > best:
+            best, label = CALENDAR_WIDEN[impact], f"calendar: {title} ({impact})"
+    return best, label
+
+
+def make_range(price, H, asset, event_widen=True, events=None):
     """Calibrated range for H bars ahead from the last bar of `price`. None if not enough data."""
     lp = np.log(price.values)
     n = len(lp)
@@ -117,6 +148,10 @@ def make_range(price, H, asset, event_widen=True):
     base = float(price.iloc[-1]); s = vol[t] * np.sqrt(H)
     moment = event_moment(price) if event_widen else None
     f = EVENT_WIDEN if moment else 1.0
+    if event_widen and events:
+        cf, clabel = calendar_factor(price, H, events)
+        if cf > f:
+            f, moment = cf, clabel
     return {"range_low": round(base * float(np.exp(f * z_lo * s)), 4), "range_high": round(base * float(np.exp(f * z_hi * s)), 4),
             "range_low90": round(base * float(np.exp(f * z_lo9 * s)), 4), "range_high90": round(base * float(np.exp(f * z_hi9 * s)), 4),
             "base_price": base, "method": method, "n_calibration": int(len(z)),
@@ -177,6 +212,7 @@ def run_once(price_by_asset, track, now):
            "data_note": "Based on Yahoo Finance futures 5-minute bars (GC=F, CL=F), which can be delayed several minutes; "
                         "because the newest price is already several minutes old, each range covers the delay PLUS the horizon "
                         "(see spans_minutes_of_movement) so that it is honest about 'minutes from now'."}
+    events = load_events(now)
     for asset, price in price_by_asset.items():
         if price is None or not len(price):
             out["assets"][asset] = {"status": "no_data"}; continue
@@ -195,7 +231,7 @@ def run_once(price_by_asset, track, now):
             k = max(1, int(np.ceil((age_min + m) / BAR_MIN)))
             if k > 24:
                 entry["ranges"][f"{m}min"] = {"status": "data_too_old"}; continue
-            rg = make_range(price, k, asset)
+            rg = make_range(price, k, asset, events=events)
             if rg is None:
                 entry["ranges"][f"{m}min"] = {"status": "insufficient_data"}; continue
             tt = base_time + timedelta(minutes=k * BAR_MIN)               # bar whose close is the scoring target
@@ -205,14 +241,14 @@ def run_once(price_by_asset, track, now):
                               "target_time": tt.isoformat(), "base_price": rg["base_price"],
                               "range_low": rg["range_low"], "range_high": rg["range_high"],
                               "range_low90": rg["range_low90"], "range_high90": rg["range_high90"],
-                              "method": rg["method"], "hit": None, "hit90": None})
+                              "method": rg["method"], "widened_for": rg.get("widened_for"), "hit": None, "hit90": None})
             l90 = live_coverage(track, asset, m, "hit90", TARGET90)
             entry["ranges"][f"{m}min"] = {"range_low": rg["range_low"], "range_high": rg["range_high"],
                                           "range_low90": rg["range_low90"], "range_high90": rg["range_high90"],
                                           "live_coverage90": l90["live_coverage"], "live_n90": l90["live_n"], "live_note90": l90["live_note"],
                                           "horizon_from_now_min": m, "spans_minutes_of_movement": k * BAR_MIN,
                                           "chance_higher": rg["chance_higher"], "chance_lower": round(1 - rg["chance_higher"], 3),
-                                          "valid_at": (t0 + timedelta(minutes=k * BAR_MIN)).isoformat(),
+                                          "valid_at": (t0 + timedelta(minutes=k * BAR_MIN)).isoformat(), "widened_for": rg.get("widened_for"),
                                           "method": rg["method"], **live_coverage(track, asset, m)}
         out["assets"][asset] = entry
     return out, track[-MAX_TRACK:]

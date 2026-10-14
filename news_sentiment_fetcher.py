@@ -48,6 +48,7 @@ from datetime import datetime, timezone
 import requests
 
 API_KEY = os.environ.get("ALPHAVANTAGE_API_KEY", "")
+HEADLINES_FILE = "market_headlines.json"   # latest relevant headlines (with source + time) -- read by GARNET for "what is driving the market"
 GOLD_OUTPUT_FILE = "news_sentiment_history.json"
 OIL_OUTPUT_FILE = "oil_news_sentiment_history.json"
 
@@ -253,9 +254,18 @@ def fetch_finnhub_batch():
             if not title or key in seen_ids:
                 continue
             seen_ids.add(key)
+            published = None
+            try:
+                if item.get("datetime"):
+                    published = datetime.fromtimestamp(int(item["datetime"]), tz=timezone.utc).isoformat(timespec="minutes")
+            except Exception:
+                published = None
             articles.append({
                 "title": title,
                 "overall_sentiment_score": analyzer.polarity_scores(title)["compound"],
+                "source": item.get("source"),
+                "url": item.get("url"),
+                "published": published,
             })
     return articles
 
@@ -372,6 +382,25 @@ def main():
             print(f"  - {t}")
     else:
         print("  No oil-relevant articles found in this batch (expected/normal for some runs).")
+
+    # Latest relevant headlines with source and publication time (context for GARNET's answer; NOT used in any number).
+    def headline_rows(keywords, wb, excl):
+        rows, seen = [], set()
+        for a in articles:
+            if is_relevant(a, keywords, wb, excl) and a.get("title") not in seen:
+                seen.add(a["title"])
+                rows.append({"title": a["title"], "source": a.get("source"), "published": a.get("published"),
+                             "sentiment": a.get("overall_sentiment_score")})
+        rows.sort(key=lambda r: r.get("published") or "", reverse=True)
+        return rows[:12]
+    try:
+        with open(HEADLINES_FILE, "w") as f:
+            json.dump({"updated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "source": source,
+                       "note": "Headlines filtered for gold / oil relevance. Context only -- not used in any calculated number.",
+                       "gold": headline_rows(GOLD_RELEVANT_KEYWORDS, GOLD_WORD_BOUNDARY_KEYWORDS, GOLD_EXCLUSIONS),
+                       "oil": headline_rows(OIL_RELEVANT_KEYWORDS, OIL_WORD_BOUNDARY_KEYWORDS, OIL_EXCLUSIONS)}, f, indent=1)
+    except Exception as e:
+        print("could not write headlines file:", e)
 
     gold_history = load_history(GOLD_OUTPUT_FILE)
     gold_history.append(gold_result)

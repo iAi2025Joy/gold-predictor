@@ -42,7 +42,7 @@ def git_push():
     run("git", "config", "user.name", "gold-predictor-bot")
     run("git", "config", "user.email", "actions@github.com")
     run("git", "add", OUT)
-    for f in ("direction_track_record.json", "direction_live_record.json", "short_range_latest.json", "short_range_track_record.json"):
+    for f in ("direction_track_record.json", "direction_live_record.json", "short_range_latest.json", "short_range_track_record.json", "event_calendar.json"):
         if os.path.exists(f):
             run("git", "add", f)
     if run("git", "diff", "--staged", "--quiet").returncode == 0:
@@ -70,6 +70,14 @@ def ranges_cycle():
     except Exception as e:
         print("ranges cycle failed:", e)
 
+def calendar_cycle():
+    """Every ~6 hours: refresh event_calendar.json (a second path besides its own workflow)."""
+    try:
+        r = subprocess.run(["python", "event_calendar_fetcher.py"], capture_output=True, text=True, timeout=120)
+        print("calendar refresh exit", r.returncode)
+    except Exception as e:
+        print("calendar cycle failed:", e)
+
 def main():
     if not API_KEY:
         raise SystemExit("GOLDPRICEZ_API_KEY is not set.")
@@ -78,6 +86,7 @@ def main():
     last_commit = time.time()
     next_dir = 0.0
     next_rng = 0.0
+    next_cal = 0.0
     while time.time() < end:
         t0 = time.time()
         if t0 >= next_dir:
@@ -86,6 +95,9 @@ def main():
         if t0 >= next_rng:
             ranges_cycle()
             next_rng = t0 + 900
+        if t0 >= next_cal:
+            calendar_cycle()
+            next_cal = t0 + 6 * 3600
         try:
             p = fetch()
             d["ticks"].append({"t": datetime.now(timezone.utc).isoformat(timespec="seconds"), "p": round(p, 2)})

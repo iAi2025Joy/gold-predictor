@@ -18,6 +18,8 @@ CHECKS = [  # (file, warn_after_hours, label)
     ("short_range_latest.json", 2, "Short-term price ranges"),
     ("direction_live_record.json", 2, "Up/down direction record"),
     ("gold_prediction_latest.json", 4, "Hourly gold prediction"),
+    ("event_calendar.json", 30, "Economic event calendar"),
+    ("market_headlines.json", 14, "News headlines"),
 ]
 RESTART_TICKS_AFTER_MIN = 45
 ISSUE_TITLE = "Data is stale"
@@ -103,7 +105,7 @@ def selftest():
     def w(f, hours_ago):
         json.dump({"updated_at": (now - timedelta(hours=hours_ago)).isoformat()}, open(os.path.join(d, f), "w"))
     for f, _, _ in CHECKS: w(f, 0.2)
-    p, ok, t = evaluate(now, d); assert not p and len(ok) == 4, (p, ok)
+    p, ok, t = evaluate(now, d); assert not p and len(ok) == len(CHECKS), (p, ok)
     w("live_gold_ticks.json", 2.5); w("short_range_latest.json", 1.0); w("gold_prediction_latest.json", 3.0)
     p, ok, t = evaluate(now, d)
     assert len(p) == 1 and "recorder" in p[0] and abs(t - 150) < 1, (p, t)
