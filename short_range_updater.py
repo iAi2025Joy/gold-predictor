@@ -62,7 +62,30 @@ def fetch_bars(ticker, now):
     return c
 
 
-def make_range(price, H, asset):
+# EVENT WIDENING (from research_range_events: at sudden spikes and at the 8:30 / 9:30 / 10:00 New York data/open bars the
+# 70% ranges only held ~59-66% of the time and needed to be ~1.2-1.3x wider; 90% bands held ~82-87%).
+EVENT_WIDEN = 1.25
+
+
+def event_moment(price):
+    """'spike', 'data_or_open' or None for the NEWEST bar (uses only data up to that bar)."""
+    if len(price) < 150:
+        return None
+    lp = np.log(price.values)
+    r1 = np.diff(lp, prepend=np.nan)
+    sd = pd.Series(r1).rolling(288, min_periods=100).std().shift(1).values[-1]
+    et = price.index[-1].tz_convert("America/New_York")
+    if (et.hour, et.minute) in ((8, 30), (9, 30), (10, 0)):
+        return "data_or_open"
+    if np.isfinite(sd) and sd > 0:
+        z1 = abs(r1[-1]) / sd
+        z3 = abs(lp[-1] - lp[-4]) / (sd * np.sqrt(3))
+        if z1 > 2.5 or z3 > 2.5:
+            return "spike"
+    return None
+
+
+def make_range(price, H, asset, event_widen=True):
     """Calibrated range for H bars ahead from the last bar of `price`. None if not enough data."""
     lp = np.log(price.values)
     n = len(lp)
@@ -92,9 +115,12 @@ def make_range(price, H, asset):
     n90 = NOMINAL90[asset]
     z_lo9, z_hi9 = np.quantile(z, [(1 - n90) / 2, 1 - (1 - n90) / 2])
     base = float(price.iloc[-1]); s = vol[t] * np.sqrt(H)
-    return {"range_low": round(base * float(np.exp(z_lo * s)), 4), "range_high": round(base * float(np.exp(z_hi * s)), 4),
-            "range_low90": round(base * float(np.exp(z_lo9 * s)), 4), "range_high90": round(base * float(np.exp(z_hi9 * s)), 4),
+    moment = event_moment(price) if event_widen else None
+    f = EVENT_WIDEN if moment else 1.0
+    return {"range_low": round(base * float(np.exp(f * z_lo * s)), 4), "range_high": round(base * float(np.exp(f * z_hi * s)), 4),
+            "range_low90": round(base * float(np.exp(f * z_lo9 * s)), 4), "range_high90": round(base * float(np.exp(f * z_hi9 * s)), 4),
             "base_price": base, "method": method, "n_calibration": int(len(z)),
+            "widened_for": moment,
             # share of recent comparable windows in which price ended HIGHER (descriptive only; studies found no predictive lean)
             "chance_higher": round(float(np.mean(rsel > 0)), 3)}
 

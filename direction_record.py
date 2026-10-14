@@ -93,8 +93,11 @@ def summarise(records, now):
                       "share_of_calls_up": round(sum(1 for r in sc if r["predicted"] == "up") / n, 3),
                       "share_of_outcomes_up": round(sum(1 for r in sc if r["outcome"] == "up") / n, 3),
                       "first_call": min(r["made_at"] for r in sc), "last_call": max(r["made_at"] for r in sc)})
+            base = max(a["share_of_outcomes_up"], 1 - a["share_of_outcomes_up"])
+            a["baseline_majority_accuracy"] = round(base, 3)
             a["statement"] = (f"Live direction record: {a['accuracy']*100:.0f}% of the last {n} ten-minute up/down calls were right "
-                              f"(a coin flip is 50%; with this many calls, normal luck is about +/-{(a['ci95_high']-a['ci95_low'])*50:.0f} points).")
+                              f"(a coin flip is 50%; simply always guessing the more common direction would have scored {base*100:.0f}%; "
+                              f"with this many calls, normal luck is about +/-{(a['ci95_high']-a['ci95_low'])*50:.0f} points).")
         res["assets"][asset] = a
     return res
 

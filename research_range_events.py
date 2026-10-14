@@ -79,7 +79,7 @@ def replay(asset, price):
             continue                      # thin out only the ordinary moments; keep every special moment
         sub = price.iloc[:t + 1]
         for hname, H in HORIZ.items():
-            m = sru.make_range(sub, H, asset)
+            m = sru.make_range(sub, H, asset, event_widen=False)   # measure the UNwidened method
             if not m:
                 continue
             base = m["base_price"]
