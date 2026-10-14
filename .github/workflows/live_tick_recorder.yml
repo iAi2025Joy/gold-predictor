@@ -1,6 +1,6 @@
 name: Record Live Gold Ticks
 
-# Starts hourly (GitHub may skip some starts -- gaps are fine), then records the live gold price every 2 minutes
+# Starts hourly (GitHub may skip some starts) AND restarts itself when it finishes, so it runs almost continuously. Records the live gold price every 2 minutes
 # for ~52 minutes, and every 10 minutes also records + scores an up/down call (direction_record.py).
 # Public repo = free minutes.
 on:
@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: live-ticks
@@ -26,6 +27,15 @@ jobs:
           python-version: '3.11'
       - run: pip install requests pandas numpy scipy yfinance
       - name: Record ticks
+        id: rec
         env:
           GOLDPRICEZ_API_KEY: ${{ secrets.GOLDPRICEZ_API_KEY }}
         run: python live_tick_recorder.py
+
+      # SELF-CHAIN: GitHub often skips scheduled starts, so when this run ends it starts the next one itself
+      # (workflow_dispatch started with the built-in token is allowed). The concurrency group prevents overlap.
+      - name: Start the next run
+        if: steps.rec.outcome == 'success'   # only chain after a healthy run, so a broken run can never loop
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run live_tick_recorder.yml --ref main || echo "could not chain next run"

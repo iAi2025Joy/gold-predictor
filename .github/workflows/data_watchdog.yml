@@ -1,0 +1,31 @@
+name: Data Watchdog
+
+# Twice an hour: checks the live data files; restarts the price recorder if it has stopped, and opens a GitHub Issue
+# (assigned to you, so GitHub emails you) if anything has been stale for 2+ hours. Closes the issue by itself when fixed.
+on:
+  schedule:
+    - cron: '23 * * * *'
+    - cron: '53 * * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  actions: write
+  issues: write
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python data_watchdog.py selftest
+      - name: Check data freshness
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
+        run: python data_watchdog.py
