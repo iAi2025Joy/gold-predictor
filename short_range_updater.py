@@ -116,7 +116,7 @@ def calendar_factor(price, H, events):
     return best, label
 
 
-def make_range(price, H, asset, event_widen=True, events=None):
+def make_range(price, H, asset, event_widen=True, events=None, nominal_adj=(0.0, 0.0)):
     """Calibrated range for H bars ahead from the last bar of `price`. None if not enough data."""
     lp = np.log(price.values)
     n = len(lp)
@@ -141,9 +141,9 @@ def make_range(price, H, asset, event_widen=True, events=None):
             z, rsel, method = zall[m2], rH[m2], "same_session"
     if len(z) < MIN_Z:
         return None
-    nom = NOMINAL[asset]
+    nom = min(0.95, max(0.50, NOMINAL[asset] + nominal_adj[0]))
     z_lo, z_hi = np.quantile(z, [(1 - nom) / 2, 1 - (1 - nom) / 2])
-    n90 = NOMINAL90[asset]
+    n90 = min(0.99, max(0.70, NOMINAL90[asset] + nominal_adj[1]))
     z_lo9, z_hi9 = np.quantile(z, [(1 - n90) / 2, 1 - (1 - n90) / 2])
     base = float(price.iloc[-1]); s = vol[t] * np.sqrt(H)
     moment = event_moment(price) if event_widen else None
@@ -187,6 +187,62 @@ def score_pending(track, price_by_asset, now):
     return track
 
 
+# ---------------------------------------------------------------- SELF-CALIBRATION
+# The system learns from its own scored ranges: if a band keeps landing OUTSIDE its target hit rate over the last 300 scored
+# ranges, the requested coverage is nudged (half the error, at most once per 6 hours, never more than +/-6 points, and only after
+# 100 scored ranges and an error bigger than the 'dead band'). Ranges already widened for events are left out of the measurement.
+CAL_FILE = "calibration_state.json"
+CAL_MIN_N, CAL_WINDOW = 100, 300
+CAL_DEADBAND = {"hit": 0.04, "hit90": 0.03}
+CAL_GAIN, CAL_MAX, CAL_EVERY_HOURS = 0.5, 0.06, 6
+
+
+def load_calibration():
+    try:
+        return json.load(open(CAL_FILE))
+    except Exception:
+        return {"adj": {}, "last_update": {}, "log": []}
+
+
+def save_calibration(cal):
+    json.dump(cal, open(CAL_FILE, "w"), indent=1)
+
+
+def get_adj(cal, asset, m):
+    a = cal.get("adj", {}).get(asset, {}).get(f"{m}min", {})
+    return float(a.get("adj70", 0.0)), float(a.get("adj90", 0.0))
+
+
+def update_calibration(cal, track, now):
+    changed = []
+    for asset in ASSETS:
+        for m in HORIZONS_MIN:
+            for key, target, field in (("hit", TARGET, "adj70"), ("hit90", TARGET90, "adj90")):
+                lk = f"{asset}|{m}|{key}"
+                last = cal["last_update"].get(lk)
+                if last and (now - datetime.fromisoformat(last)).total_seconds() < CAL_EVERY_HOURS * 3600:
+                    continue
+                h = [e[key] for e in track if e["asset"] == asset and e["horizon_min"] == m
+                     and e.get(key) is not None and not e.get("widened_for")][-CAL_WINDOW:]
+                if len(h) < CAL_MIN_N:
+                    continue
+                cov = sum(h) / len(h)
+                err = target - cov
+                if abs(err) <= CAL_DEADBAND[key]:
+                    continue
+                slot = cal["adj"].setdefault(asset, {}).setdefault(f"{m}min", {"adj70": 0.0, "adj90": 0.0})
+                old = slot[field]
+                new = max(-CAL_MAX, min(CAL_MAX, old + CAL_GAIN * err))
+                if abs(new - old) < 1e-9:
+                    continue
+                slot[field] = round(new, 4)
+                cal["last_update"][lk] = now.isoformat()
+                changed.append({"time": now.isoformat(timespec="minutes"), "asset": asset, "horizon": f"{m}min", "band": field,
+                                "measured_hit_rate": round(cov, 3), "n": len(h), "adjustment_before": old, "adjustment_after": slot[field]})
+    cal["log"] = (cal.get("log", []) + changed)[-50:]
+    return changed
+
+
 def live_coverage(track, asset, horizon, key="hit", target=TARGET):
     h = [e[key] for e in track if e["asset"] == asset and e["horizon_min"] == horizon and e.get(key) is not None][-LIVE_WINDOW:]
     n = len(h)
@@ -202,8 +258,10 @@ def live_coverage(track, asset, horizon, key="hit", target=TARGET):
     return {"live_coverage": round(c, 4), "live_n": n, "live_note": note}
 
 
-def run_once(price_by_asset, track, now):
+def run_once(price_by_asset, track, now, cal=None):
     track = score_pending(track, price_by_asset, now)
+    cal = cal if cal is not None else {"adj": {}, "last_update": {}, "log": []}
+    update_calibration(cal, track, now)
     existing = {(e["asset"], e["horizon_min"], e["base_time"]) for e in track}
     out = {"updated_at": now.isoformat(), "coverage_target": TARGET, "assets": {},
            "method_note": ("Calibrated price ranges, NOT direction forecasts: direction cannot be predicted better than chance "
@@ -231,7 +289,7 @@ def run_once(price_by_asset, track, now):
             k = max(1, int(np.ceil((age_min + m) / BAR_MIN)))
             if k > 24:
                 entry["ranges"][f"{m}min"] = {"status": "data_too_old"}; continue
-            rg = make_range(price, k, asset, events=events)
+            rg = make_range(price, k, asset, events=events, nominal_adj=get_adj(cal, asset, m))
             if rg is None:
                 entry["ranges"][f"{m}min"] = {"status": "insufficient_data"}; continue
             tt = base_time + timedelta(minutes=k * BAR_MIN)               # bar whose close is the scoring target
@@ -249,6 +307,7 @@ def run_once(price_by_asset, track, now):
                                           "horizon_from_now_min": m, "spans_minutes_of_movement": k * BAR_MIN,
                                           "chance_higher": rg["chance_higher"], "chance_lower": round(1 - rg["chance_higher"], 3),
                                           "valid_at": (t0 + timedelta(minutes=k * BAR_MIN)).isoformat(), "widened_for": rg.get("widened_for"),
+                                          "self_calibration": {"adj70": get_adj(cal, asset, m)[0], "adj90": get_adj(cal, asset, m)[1]},
                                           "method": rg["method"], **live_coverage(track, asset, m)}
         out["assets"][asset] = entry
     return out, track[-MAX_TRACK:]
@@ -266,7 +325,10 @@ def main():
     if ok == 0:
         print("All fetches failed."); sys.exit(1)
     track = json.load(open(TRACK_FILE)) if os.path.exists(TRACK_FILE) else []
-    out, track = run_once(prices, track, now)
+    cal = load_calibration()
+    out, track = run_once(prices, track, now, cal=cal)
+    save_calibration(cal)
+    out["self_calibration_log"] = cal.get("log", [])[-5:]
     json.dump(out, open(LATEST_FILE, "w"), indent=2)
     json.dump(track, open(TRACK_FILE, "w"), separators=(",", ":"))
     print(json.dumps(out, indent=2))

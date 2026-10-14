@@ -42,7 +42,7 @@ def git_push():
     run("git", "config", "user.name", "gold-predictor-bot")
     run("git", "config", "user.email", "actions@github.com")
     run("git", "add", OUT)
-    for f in ("direction_track_record.json", "direction_live_record.json", "short_range_latest.json", "short_range_track_record.json", "event_calendar.json"):
+    for f in ("direction_track_record.json", "direction_live_record.json", "short_range_latest.json", "short_range_track_record.json", "event_calendar.json", "calibration_state.json"):
         if os.path.exists(f):
             run("git", "add", f)
     if run("git", "diff", "--staged", "--quiet").returncode == 0:
