@@ -187,6 +187,73 @@ def rule_leaderboard(scored, baseline):
     return {"champion": champ, "rules_tested": len(rows), "leaderboard": rows, "verdict": verdict}
 
 
+# ------------------------------------------------------------ extra horizons (20 / 30 / 60 minutes)
+# The 10-minute record above is unchanged. Each longer horizon gets its OWN scored record so every row of the GARNET table can show
+# its own live hit rate. Calls are made every cycle (10 min), so 20/30/60-minute outcomes overlap; the honest sample size is
+# therefore n * 10 / horizon ("independent calls") and that is what the margin of luck uses.
+H_EXTRA = (20, 30, 60)
+H_FILE = "direction_horizon_calls.json"
+
+def make_horizon_call(asset, price, now, make_range, H):
+    if price is None or len(price) < 700:
+        return None
+    if now - price.index[-1].to_pydatetime() > timedelta(minutes=MAX_BAR_AGE_MIN):
+        return None
+    m = make_range(price, H // 5, asset)
+    if not m or m.get("chance_higher") is None:
+        return None
+    t_end = _floor5(now)
+    base_bar = t_end - timedelta(minutes=5)
+    target_bar = base_bar + timedelta(minutes=H)
+    return {"id": f"{asset}-{H}-{base_bar.isoformat()}", "asset": asset, "h": H, "made_at": now.isoformat(timespec="seconds"),
+            "base_bar": base_bar.isoformat(), "target_bar": target_bar.isoformat(),
+            "predicted": "up" if m["chance_higher"] >= 0.5 else "down", "chance_up": m["chance_higher"], "status": "pending"}
+
+def prune_h(records):
+    out = []
+    for asset in {r["asset"] for r in records}:
+        for H in H_EXTRA:
+            rs = [r for r in records if r["asset"] == asset and r["h"] == H]
+            scored = sorted([r for r in rs if r["status"] == "scored"], key=lambda r: r["target_bar"])[-KEEP:]
+            out += scored + [r for r in rs if r["status"] == "pending"]
+    return sorted(out, key=lambda r: (r["asset"], r["h"], r["target_bar"]))
+
+def summarise_h(records):
+    res = {}
+    for asset in sorted({r["asset"] for r in records}):
+        res[asset] = {}
+        for H in H_EXTRA:
+            sc = [r for r in records if r["asset"] == asset and r["h"] == H and r["status"] == "scored"]
+            n = len(sc)
+            if not n:
+                res[asset][f"{H}min"] = {"n_scored": 0}
+                continue
+            k = sum(1 for r in sc if r["correct"])
+            up = sum(1 for r in sc if r["outcome"] == "up") / n
+            n_eff = max(1, int(round(n * 10 / H)))
+            res[asset][f"{H}min"] = {"n_scored": n, "n_correct": k, "accuracy": round(k / n, 4), "independent_calls": n_eff,
+                                     "baseline_majority_accuracy": round(max(up, 1 - up), 3),
+                                     "luck_margin_points": round(50 * 2 * (0.25 / n_eff) ** 0.5 * 1.96, 1)}
+    return res
+
+def horizon_cycle(prices, now, make_range):
+    try:
+        recs = json.load(open(H_FILE))["calls"]
+    except Exception:
+        recs = []
+    recs = score(recs, prices, now)
+    have = {r["id"] for r in recs}
+    for asset, p in prices.items():
+        for H in H_EXTRA:
+            c = make_horizon_call(asset, p, now, make_range, H)
+            if c and c["id"] not in have:
+                recs.append(c)
+    recs = prune_h(recs)
+    json.dump({"note": "Extra-horizon (20/30/60 min) calls; newest 1000 scored per asset and horizon plus pending.", "calls": recs},
+              open(H_FILE, "w"), separators=(",", ":"))
+    return summarise_h(recs)
+
+
 def load_records():
     try:
         return json.load(open(RECORD_FILE))["calls"]
@@ -221,6 +288,15 @@ def run_once():
             print("bars failed", asset, e)
     recs = cycle(prices, now, sru.make_range)
     save_all(recs, now)
+    try:                                              # extra horizons never break the main 10-minute record
+        hs = horizon_cycle(prices, now, sru.make_range)
+        summ = json.load(open(SUMMARY_FILE))
+        for asset, h in hs.items():
+            if asset in summ["assets"]:
+                summ["assets"][asset]["horizons"] = h
+        json.dump(summ, open(SUMMARY_FILE, "w"), indent=1)
+    except Exception as e:
+        print("horizon cycle failed:", e)
     print(json.dumps(summarise(recs, now)["assets"], indent=1))
 
 # ---------------------------------------------------------------- selftest
