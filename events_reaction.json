@@ -1,5 +1,5 @@
 {
- "updated_at": "2026-10-15T12:22:33+00:00",
+ "updated_at": "2026-10-15T12:32:33+00:00",
  "actual_source": "Finnhub economic calendar refused (HTTP 403; likely a paid feature)",
  "rule": "gold direction = sign(actual - forecast) x fixed family sign (inflation/strength: down; unemployment/claims: up)",
  "analysis": {
@@ -18,10 +18,67 @@
     "n": 0
    }
   },
-  "n_releases_logged": 0,
+  "n_releases_logged": 1,
   "n_with_surprise": 0,
   "validated": [],
   "verdict": "Not validated yet: 0 releases with a known surprise (needs at least 20)."
  },
- "releases": []
+ "releases": [
+  {
+   "time_utc": "2026-10-15T12:30+00:00",
+   "events": [
+    {
+     "title": "Core PPI m/m",
+     "family": "inflation",
+     "sign": -1,
+     "forecast": "0.3%",
+     "previous": "0.2%",
+     "actual": null
+    },
+    {
+     "title": "Core Retail Sales m/m",
+     "family": "activity",
+     "sign": -1,
+     "forecast": "0.6%",
+     "previous": "1.4%",
+     "actual": null
+    },
+    {
+     "title": "PPI m/m",
+     "family": "inflation",
+     "sign": -1,
+     "forecast": "0.6%",
+     "previous": "0.4%",
+     "actual": null
+    },
+    {
+     "title": "Retail Sales m/m",
+     "family": "activity",
+     "sign": -1,
+     "forecast": "0.3%",
+     "previous": "1.2%",
+     "actual": null
+    },
+    {
+     "title": "Philly Fed Manufacturing Index",
+     "family": null,
+     "sign": 0,
+     "forecast": "28.2",
+     "previous": "37.8",
+     "actual": null
+    },
+    {
+     "title": "Unemployment Claims",
+     "family": "jobs_weakness",
+     "sign": 1,
+     "forecast": "199K",
+     "previous": "197K",
+     "actual": null
+    }
+   ],
+   "gold": {
+    "p0": 4150.45
+   }
+  }
+ ]
 }
