@@ -30,6 +30,7 @@ jobs:
         id: rec
         env:
           GOLDPRICEZ_API_KEY: ${{ secrets.GOLDPRICEZ_API_KEY }}
+          FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
         run: python live_tick_recorder.py
 
       # SELF-CHAIN: GitHub often skips scheduled starts, so when this run ends it starts the next one itself
