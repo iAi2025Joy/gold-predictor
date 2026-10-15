@@ -42,7 +42,7 @@ def git_push():
     run("git", "config", "user.name", "gold-predictor-bot")
     run("git", "config", "user.email", "actions@github.com")
     run("git", "add", OUT)
-    for f in ("direction_track_record.json", "direction_horizon_calls.json", "direction_live_record.json", "short_range_latest.json", "short_range_track_record.json", "event_calendar.json", "calibration_state.json"):
+    for f in ("direction_track_record.json", "direction_horizon_calls.json", "events_reaction.json", "direction_live_record.json", "short_range_latest.json", "short_range_track_record.json", "event_calendar.json", "calibration_state.json"):
         if os.path.exists(f):
             run("git", "add", f)
     if run("git", "diff", "--staged", "--quiet").returncode == 0:
@@ -61,6 +61,11 @@ def direction_cycle():
         direction_record.run_once()
     except Exception as e:
         print("direction cycle failed:", e)
+    try:                                              # release-reaction log: never allowed to break tick recording
+        import event_reaction
+        event_reaction.run_once()
+    except Exception as e:
+        print("event reaction cycle failed:", e)
 
 def ranges_cycle():
     """Every ~15 minutes: refresh short_range_latest.json (GitHub often skips the separate 15-minute schedule)."""
