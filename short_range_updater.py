@@ -258,6 +258,18 @@ def live_coverage(track, asset, horizon, key="hit", target=TARGET):
     return {"live_coverage": round(c, 4), "live_n": n, "live_note": note}
 
 
+def one_sided(track, asset, horizon):
+    """How often the real price ended ABOVE the low end / BELOW the high end of the 70% range (last LIVE_WINDOW scored checks).
+    A central 70% range should leave about 15% in each tail, so each side should hold about 85% of the time."""
+    h = [e for e in track if e["asset"] == asset and e["horizon_min"] == horizon and e.get("actual_price") is not None
+         and e.get("hit") is not None][-LIVE_WINDOW:]
+    n = len(h)
+    if n == 0:
+        return {"stay_above_low_rate": None, "stay_below_high_rate": None, "one_sided_n": 0}
+    return {"stay_above_low_rate": round(sum(1 for e in h if e["actual_price"] >= e["range_low"]) / n, 4),
+            "stay_below_high_rate": round(sum(1 for e in h if e["actual_price"] <= e["range_high"]) / n, 4), "one_sided_n": n}
+
+
 def run_once(price_by_asset, track, now, cal=None):
     track = score_pending(track, price_by_asset, now)
     cal = cal if cal is not None else {"adj": {}, "last_update": {}, "log": []}
@@ -308,7 +320,7 @@ def run_once(price_by_asset, track, now, cal=None):
                                           "chance_higher": rg["chance_higher"], "chance_lower": round(1 - rg["chance_higher"], 3),
                                           "valid_at": (t0 + timedelta(minutes=k * BAR_MIN)).isoformat(), "widened_for": rg.get("widened_for"),
                                           "self_calibration": {"adj70": get_adj(cal, asset, m)[0], "adj90": get_adj(cal, asset, m)[1]},
-                                          "method": rg["method"], **live_coverage(track, asset, m)}
+                                          "method": rg["method"], **live_coverage(track, asset, m), **one_sided(track, asset, m)}
         out["assets"][asset] = entry
     return out, track[-MAX_TRACK:]
 
