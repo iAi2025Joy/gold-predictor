@@ -1,22 +1,22 @@
 {
- "updated_at": "2026-10-16T03:04:44+00:00",
+ "updated_at": "2026-10-16T03:14:44+00:00",
  "window": "last 1000 scored 10-minute calls",
  "how_to_read": "Each call is Up or Down for the next 10 minutes, scored against the real price 10 minutes later. 50% is a coin flip. Unchanged prices and market-closed periods are not counted.",
  "assets": {
   "gold": {
-   "n_scored": 275,
+   "n_scored": 276,
    "n_correct": 136,
    "pending": 2,
-   "accuracy": 0.4945,
-   "ci95_low": 0.4359,
-   "ci95_high": 0.5533,
-   "p_vs_coin_flip": 0.904,
+   "accuracy": 0.4928,
+   "ci95_low": 0.4343,
+   "ci95_high": 0.5514,
+   "p_vs_coin_flip": 0.8567,
    "share_of_calls_up": 0.0,
-   "share_of_outcomes_up": 0.505,
+   "share_of_outcomes_up": 0.507,
    "first_call": "2026-10-13T12:44:53+00:00",
-   "last_call": "2026-10-16T02:44:44+00:00",
-   "baseline_majority_accuracy": 0.505,
-   "statement": "Live direction record: 49% of the last 275 ten-minute up/down calls were right (a coin flip is 50%; simply always guessing the more common direction would have scored 50%; with this many calls, normal luck is about +/-6 points). Rule check: 8 simple rules are being tested side by side; at least 300 calls are needed before any can be judged.",
+   "last_call": "2026-10-16T02:54:44+00:00",
+   "baseline_majority_accuracy": 0.507,
+   "statement": "Live direction record: 49% of the last 276 ten-minute up/down calls were right (a coin flip is 50%; simply always guessing the more common direction would have scored 51%; with this many calls, normal luck is about +/-6 points). Rule check: 8 simple rules are being tested side by side; at least 300 calls are needed before any can be judged.",
    "learning": {
     "champion": null,
     "rules_tested": 8,
@@ -32,46 +32,46 @@
      },
      {
       "rule": "reversal_60m",
-      "n": 223,
-      "accuracy": 0.5336,
+      "n": 224,
+      "accuracy": 0.5312,
       "recent_third_accuracy": 0.4595,
-      "p_vs_coin_flip": 0.3485,
+      "p_vs_coin_flip": 0.3851,
       "p_vs_baseline_corrected": 1.0,
       "validated": false
      },
      {
       "rule": "momentum_15m",
-      "n": 223,
-      "accuracy": 0.5247,
+      "n": 224,
+      "accuracy": 0.5268,
       "recent_third_accuracy": 0.5541,
-      "p_vs_coin_flip": 0.5032,
+      "p_vs_coin_flip": 0.4624,
       "p_vs_baseline_corrected": 1.0,
       "validated": false
      },
      {
       "rule": "analog",
-      "n": 275,
-      "accuracy": 0.4945,
-      "recent_third_accuracy": 0.4835,
-      "p_vs_coin_flip": 0.904,
+      "n": 276,
+      "accuracy": 0.4928,
+      "recent_third_accuracy": 0.4783,
+      "p_vs_coin_flip": 0.8567,
       "p_vs_baseline_corrected": 1.0,
       "validated": false
      },
      {
       "rule": "reversal_15m",
-      "n": 223,
-      "accuracy": 0.4753,
+      "n": 224,
+      "accuracy": 0.4732,
       "recent_third_accuracy": 0.4459,
-      "p_vs_coin_flip": 0.5032,
+      "p_vs_coin_flip": 0.4624,
       "p_vs_baseline_corrected": 1.0,
       "validated": false
      },
      {
       "rule": "momentum_60m",
-      "n": 223,
-      "accuracy": 0.4664,
+      "n": 224,
+      "accuracy": 0.4688,
       "recent_third_accuracy": 0.5405,
-      "p_vs_coin_flip": 0.3485,
+      "p_vs_coin_flip": 0.3851,
       "p_vs_baseline_corrected": 1.0,
       "validated": false
      },
@@ -86,10 +86,10 @@
      },
      {
       "rule": "follow_recent_outcomes",
-      "n": 187,
-      "accuracy": 0.4332,
+      "n": 188,
+      "accuracy": 0.4309,
       "recent_third_accuracy": 0.4355,
-      "p_vs_coin_flip": 0.079,
+      "p_vs_coin_flip": 0.068,
       "p_vs_baseline_corrected": 1.0,
       "validated": false
      }
@@ -98,64 +98,64 @@
    },
    "horizons": {
     "20min": {
-     "n_scored": 96,
+     "n_scored": 97,
      "n_correct": 48,
-     "accuracy": 0.5,
+     "accuracy": 0.4948,
      "independent_calls": 48,
-     "baseline_majority_accuracy": 0.5,
+     "baseline_majority_accuracy": 0.505,
      "luck_margin_points": 14.1
     },
     "30min": {
-     "n_scored": 94,
+     "n_scored": 95,
      "n_correct": 33,
-     "accuracy": 0.3511,
-     "independent_calls": 31,
-     "baseline_majority_accuracy": 0.521,
-     "luck_margin_points": 17.6
+     "accuracy": 0.3474,
+     "independent_calls": 32,
+     "baseline_majority_accuracy": 0.516,
+     "luck_margin_points": 17.3
     },
     "60min": {
-     "n_scored": 88,
+     "n_scored": 89,
      "n_correct": 29,
-     "accuracy": 0.3295,
+     "accuracy": 0.3258,
      "independent_calls": 15,
-     "baseline_majority_accuracy": 0.523,
+     "baseline_majority_accuracy": 0.528,
      "luck_margin_points": 25.3
     }
    }
   },
   "oil": {
-   "n_scored": 273,
-   "n_correct": 135,
+   "n_scored": 274,
+   "n_correct": 136,
    "pending": 2,
-   "accuracy": 0.4945,
-   "ci95_low": 0.4357,
-   "ci95_high": 0.5535,
-   "p_vs_coin_flip": 0.9037,
-   "share_of_calls_up": 0.744,
-   "share_of_outcomes_up": 0.524,
+   "accuracy": 0.4964,
+   "ci95_low": 0.4376,
+   "ci95_high": 0.5552,
+   "p_vs_coin_flip": 0.9518,
+   "share_of_calls_up": 0.741,
+   "share_of_outcomes_up": 0.522,
    "first_call": "2026-10-13T12:44:53+00:00",
-   "last_call": "2026-10-16T02:44:44+00:00",
-   "baseline_majority_accuracy": 0.524,
-   "statement": "Live direction record: 49% of the last 273 ten-minute up/down calls were right (a coin flip is 50%; simply always guessing the more common direction would have scored 52%; with this many calls, normal luck is about +/-6 points). Rule check: 8 simple rules are being tested side by side; at least 300 calls are needed before any can be judged.",
+   "last_call": "2026-10-16T02:54:44+00:00",
+   "baseline_majority_accuracy": 0.522,
+   "statement": "Live direction record: 50% of the last 274 ten-minute up/down calls were right (a coin flip is 50%; simply always guessing the more common direction would have scored 52%; with this many calls, normal luck is about +/-6 points). Rule check: 8 simple rules are being tested side by side; at least 300 calls are needed before any can be judged.",
    "learning": {
     "champion": null,
     "rules_tested": 8,
     "leaderboard": [
      {
-      "rule": "reversal_60m",
-      "n": 220,
-      "accuracy": 0.5455,
-      "recent_third_accuracy": 0.5342,
-      "p_vs_coin_flip": 0.2001,
+      "rule": "reversal_15m",
+      "n": 216,
+      "accuracy": 0.5463,
+      "recent_third_accuracy": 0.625,
+      "p_vs_coin_flip": 0.196,
       "p_vs_baseline_corrected": 1.0,
       "validated": false
      },
      {
-      "rule": "reversal_15m",
-      "n": 215,
-      "accuracy": 0.5442,
-      "recent_third_accuracy": 0.6197,
-      "p_vs_coin_flip": 0.2195,
+      "rule": "reversal_60m",
+      "n": 221,
+      "accuracy": 0.543,
+      "recent_third_accuracy": 0.5205,
+      "p_vs_coin_flip": 0.2259,
       "p_vs_baseline_corrected": 1.0,
       "validated": false
      },
@@ -170,10 +170,10 @@
      },
      {
       "rule": "analog",
-      "n": 273,
-      "accuracy": 0.4945,
+      "n": 274,
+      "accuracy": 0.4964,
       "recent_third_accuracy": 0.5385,
-      "p_vs_coin_flip": 0.9037,
+      "p_vs_coin_flip": 0.9518,
       "p_vs_baseline_corrected": 1.0,
       "validated": false
      },
@@ -187,29 +187,29 @@
       "validated": false
      },
      {
+      "rule": "momentum_60m",
+      "n": 221,
+      "accuracy": 0.457,
+      "recent_third_accuracy": 0.4795,
+      "p_vs_coin_flip": 0.2259,
+      "p_vs_baseline_corrected": 1.0,
+      "validated": false
+     },
+     {
       "rule": "momentum_15m",
-      "n": 215,
-      "accuracy": 0.4558,
-      "recent_third_accuracy": 0.3803,
-      "p_vs_coin_flip": 0.2195,
+      "n": 216,
+      "accuracy": 0.4537,
+      "recent_third_accuracy": 0.375,
+      "p_vs_coin_flip": 0.196,
       "p_vs_baseline_corrected": 1.0,
       "validated": false
      },
      {
       "rule": "follow_recent_outcomes",
-      "n": 156,
-      "accuracy": 0.4551,
+      "n": 157,
+      "accuracy": 0.4522,
       "recent_third_accuracy": 0.4808,
-      "p_vs_coin_flip": 0.2979,
-      "p_vs_baseline_corrected": 1.0,
-      "validated": false
-     },
-     {
-      "rule": "momentum_60m",
-      "n": 220,
-      "accuracy": 0.4545,
-      "recent_third_accuracy": 0.4658,
-      "p_vs_coin_flip": 0.2001,
+      "p_vs_coin_flip": 0.2638,
       "p_vs_baseline_corrected": 1.0,
       "validated": false
      }
@@ -218,27 +218,27 @@
    },
    "horizons": {
     "20min": {
-     "n_scored": 93,
+     "n_scored": 94,
      "n_correct": 55,
-     "accuracy": 0.5914,
-     "independent_calls": 46,
-     "baseline_majority_accuracy": 0.591,
-     "luck_margin_points": 14.4
+     "accuracy": 0.5851,
+     "independent_calls": 47,
+     "baseline_majority_accuracy": 0.596,
+     "luck_margin_points": 14.3
     },
     "30min": {
-     "n_scored": 91,
+     "n_scored": 92,
      "n_correct": 58,
-     "accuracy": 0.6374,
-     "independent_calls": 30,
-     "baseline_majority_accuracy": 0.593,
-     "luck_margin_points": 17.9
+     "accuracy": 0.6304,
+     "independent_calls": 31,
+     "baseline_majority_accuracy": 0.598,
+     "luck_margin_points": 17.6
     },
     "60min": {
-     "n_scored": 88,
-     "n_correct": 52,
-     "accuracy": 0.5909,
+     "n_scored": 89,
+     "n_correct": 53,
+     "accuracy": 0.5955,
      "independent_calls": 15,
-     "baseline_majority_accuracy": 0.534,
+     "baseline_majority_accuracy": 0.528,
      "luck_margin_points": 25.3
     }
    }
