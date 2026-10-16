@@ -1,10 +1,10 @@
 {
   "prediction": "down",
-  "prediction_probability_up": 0.3022973297381419,
+  "prediction_probability_up": 0.2902701573570476,
   "confidence_note": "Not enough held-out test data yet to evaluate this model's real accuracy (need at least 20 test rows). Present any direction call as unproven, not confident.",
   "model_type_used": "logistic_regression",
   "current_dxy": 121.6023,
-  "predicted_dxy": 122.25021746499912,
+  "predicted_dxy": 122.1264327320317,
   "price_model_type_used": "linear_regression",
   "price_direction_vs_current": "higher",
   "direction_price_agreement": false,
@@ -35,16 +35,16 @@
     "context_note": "The June 2026 SEP shifted notably more hawkish than March's: 9 of 18 participants projected at least one 2026 rate hike, versus March's median implying a cut. Fed Chair Kevin Warsh (new as of this meeting) did not submit a personal projection."
   },
   "market_rate_expectation_proxy": {
-    "latest_2y_treasury_yield_pct": 4.82,
+    "latest_2y_treasury_yield_pct": 4.77,
     "fed_funds_midpoint_pct": 3.875,
-    "yield_minus_fed_funds_spread_pct": 0.945,
+    "yield_minus_fed_funds_spread_pct": 0.895,
     "market_rate_expectation_lean": "hikes_appear_priced_in",
     "methodology_note": "This is an APPROXIMATION using the 2-Year Treasury yield vs. the current Fed funds midpoint -- a real, legitimate technique, but a rough directional signal over a ~2-year horizon, NOT precise per-meeting market-implied probability (which would require a paid data source like CME FedWatch that this system does not have access to). Never present this as if it were exact market odds -- frame it as 'bond market pricing broadly suggests', not as a specific probability."
   },
   "fed_rate_outlook_note": "fed_rate_outlook contains the Fed's OWN published median rate projections (the 'dot plot' from their Summary of Economic Projections), NOT market-implied probability. market_rate_expectation_proxy is a SEPARATE, rough approximation of market pricing using 2yr Treasury yields -- see its own methodology_note field. Always attribute each correctly.",
   "latest_macro_news_sentiment_score": null,
   "news_sentiment_note": "This reuses the same macro/Fed-relevant news sentiment score computed for the gold model, not a DXY-exclusive filter.",
-  "latest_real_yield_10y_pct": 2.84,
+  "latest_real_yield_10y_pct": 2.78,
   "latest_vix": 16.46,
   "next_economic_event_name": "FOMC Rate Decision",
   "hours_until_next_economic_event": 72.0,
@@ -54,11 +54,11 @@
   "data_source_note": "Tracks DTWEXBGS (FRED's Trade-Weighted Broad Dollar Index), a free, reputable dollar-strength benchmark -- not the identical series to the licensed ICE 'DXY' futures ticker some platforms show, though the two move very closely together.",
   "historical_data_start_date": "2026-07-28",
   "historical_data_end_date": "2026-10-16",
-  "updated_at": "2026-10-16T17:00:28.656678+00:00",
+  "updated_at": "2026-10-16T21:46:21.790234+00:00",
   "data_points_used": 81,
-  "rolling_predictions_tracked": 6,
+  "rolling_predictions_tracked": 7,
   "rolling_direction_accuracy": 1.0,
-  "rolling_price_mae": 0.5565845724859031,
+  "rolling_price_mae": 0.5696321285592205,
   "rolling_accuracy_is_significant": false,
-  "rolling_accuracy_note": "Only 6 resolved live predictions so far (need 20+ for significance). Raw: 6/6 (100.0%)."
+  "rolling_accuracy_note": "Only 7 resolved live predictions so far (need 20+ for significance). Raw: 7/7 (100.0%)."
 }
