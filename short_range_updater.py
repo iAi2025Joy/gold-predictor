@@ -123,7 +123,11 @@ def make_range(price, H, asset, event_widen=True, events=None, nominal_adj=(0.0,
     if n < CAL_POINTS + VOL_BARS + H + 5:
         return None
     r1 = np.diff(lp, prepend=np.nan)
-    vol = pd.Series(r1).rolling(VOL_BARS).std().values
+    # VOLATILITY ESTIMATE: exponentially weighted (alpha 0.03 per 5-minute bar, about a 5-hour memory) instead of a flat 36-bar window.
+    # Walk-forward test (research_range_sharpness, ~60 days of real bars): tighter ranges at the same coverage in all 8
+    # asset x horizon combinations (interval score 0.3% to 2.5% better). Small but consistent; it costs nothing.
+    vol = np.sqrt(pd.Series(r1 ** 2).ewm(alpha=0.03, adjust=False).mean().values)
+    vol[:VOL_BARS] = np.nan
     t = n - 1
     if not np.isfinite(vol[t]) or vol[t] <= 0:
         return None

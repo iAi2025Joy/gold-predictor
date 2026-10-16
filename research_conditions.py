@@ -78,6 +78,39 @@ def evaluate(p, H, lo, hi, cond=None):
                     res[(meas, thr, sess, mode)] = (int(correct.sum()), len(idx), float(real_up.mean()), len(idx) / max(1, len(lp[lo:hi])))
     return res
 
+
+def tod_family(p, H, cut):
+    """Time-of-day drift: for each 30-minute clock bucket (UTC), does price tend to rise or fall over the next H bars?
+    Direction per bucket is learned on DISCOVERY only; the hold-out then checks it. Returns validated rows + counts."""
+    lp = np.log(p.values.astype(float)); n = len(lp)
+    fut = np.full(n, np.nan); fut[:-H] = lp[H:] - lp[:-H]
+    idxu = p.index.tz_convert("UTC") if p.index.tz is not None else p.index
+    b = (idxu.hour * 2 + idxu.minute // 30).values
+    rows, surv = [], []
+    for bk in range(48):
+        di = np.where((b == bk) & np.isfinite(fut) & (fut != 0) & (np.arange(n) >= 100) & (np.arange(n) < cut))[0]
+        if len(di) / H < 25:
+            continue
+        up = (fut[di] > 0).mean(); n_eff = int(round(len(di) / H))
+        if stats.binomtest(int(round(up * n_eff)), n_eff, 0.5).pvalue < 0.05:
+            surv.append((bk, "up" if up > 0.5 else "down", up))
+    for bk, d, up in surv:
+        hi = np.where((b == bk) & np.isfinite(fut) & (fut != 0) & (np.arange(n) >= cut) & (np.arange(n) < n - H))[0]
+        n_eff = int(round(len(hi) / H))
+        if n_eff < 10:
+            continue
+        real_up = (fut[hi] > 0)
+        k = int(round(((real_up if d == "up" else ~real_up).mean()) * n_eff))
+        allh = np.where(np.isfinite(fut) & (fut != 0) & (np.arange(n) >= cut) & (np.arange(n) < n - H))[0]
+        ua = (fut[allh] > 0).mean()
+        base = max(ua, 1 - ua)                      # market-wide commoner direction in the hold-out (not this bucket's own hindsight)
+        pc = min(1.0, stats.binomtest(k, n_eff, max(0.5, base), alternative="greater").pvalue * max(1, len(surv)))
+        acc = k / n_eff
+        rows.append({"condition": f"time-of-day {bk // 2:02d}:{(bk % 2) * 30:02d} UTC -> {d}", "disc_accuracy": round(max(up, 1 - up), 3),
+                     "hold_accuracy": round(acc, 3), "hold_baseline": round(base, 3), "hold_independent_n": n_eff,
+                     "share_of_time": round(1 / 48, 4), "p_corrected": round(float(pc), 4), "validated": bool(acc >= 0.58 and pc < HOLD_ALPHA)})
+    return rows, len(surv)
+
 def run(prices, horizons):
     report = {"assets": {}, "design": {"discovery_fraction": DISC_FRAC, "conditions": len(MEASURES) * len(THRESHOLDS) * len(SESSIONS) * 2}}
     validated_all = []
@@ -109,6 +142,11 @@ def run(prices, horizons):
                              "share_of_time": round(cov, 4), "p_corrected": round(float(pcorr), 4), "validated": bool(ok)})
                 if ok:
                     validated_all.append(f"{asset}|{label}|{rows[-1]['condition']}")
+            trows, tsurv = tod_family(p, H, cut)
+            for r in trows:
+                if r["validated"]:
+                    validated_all.append(f"{asset}|{label}|{r['condition']}")
+            rows += trows; surv = list(surv) + [None] * tsurv
             rows.sort(key=lambda r: -r["hold_accuracy"])
             report["assets"][asset][label] = {"conditions_tested": len(disc), "survived_discovery": len(surv), "holdout": rows[:12]}
             print(f"[{asset} {label}] tested={len(disc)} survived discovery={len(surv)} validated on hold-out={sum(r['validated'] for r in rows)}")
@@ -131,16 +169,21 @@ def synth(kind, n=20000, seed=7):
             if abs(m3) > 2.0 and 13 <= hh < 21:
                 s = -np.sign(m3)
                 r[i + 1] = (s if rng.random() < 0.65 else -s) * abs(r[i + 1]) * 1.5
+    if kind == "tod":                                           # steady upward drift in the 14:30-15:00 UTC half-hour
+        for i in range(n):
+            if idx[i].hour == 14 and idx[i].minute >= 30:
+                r[i] += 0.0006
     return {"gold": pd.Series(2000 * np.exp(np.cumsum(r)), index=idx)}
 
 def main():
     if "--selftest" in sys.argv:
         ok = True
-        for kind in ("noise", "hidden"):
+        for kind in ("noise", "hidden", "tod"):
             rep = run(synth(kind), {"5min": 1, "10min": 2})
             print(f"SELFTEST {kind}: {rep['verdict']}")
             if kind == "noise" and rep["validated"]: ok = False; print("FAIL: noise validated something")
             if kind == "hidden" and not rep["validated"]: ok = False; print("FAIL: hidden rule not found")
+            if kind == "tod" and not any("time-of-day" in v for v in rep["validated"]): ok = False; print("FAIL: time-of-day drift not found")
         print("SELFTEST PASSED" if ok else "SELFTEST FAILED"); sys.exit(0 if ok else 1)
     rep = run(load_live(), HORIZONS)
     print("\nVERDICT:", rep["verdict"])
