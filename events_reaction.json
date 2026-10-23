@@ -1,5 +1,5 @@
 {
- "updated_at": "2026-10-23T13:39:19+00:00",
+ "updated_at": "2026-10-23T13:49:19+00:00",
  "actual_source": "Finnhub economic calendar refused (HTTP 403; likely a paid feature)",
  "rule": "gold direction = sign(actual - forecast) x fixed family sign (inflation/strength: down; unemployment/claims: up)",
  "analysis": {
@@ -18,7 +18,7 @@
     "n": 0
    }
   },
-  "n_releases_logged": 5,
+  "n_releases_logged": 6,
   "n_with_surprise": 0,
   "validated": [],
   "verdict": "Not validated yet: 0 releases with a known surprise (needs at least 20)."
@@ -162,6 +162,30 @@
     "p20": 4086.94,
     "p30": 4087.77,
     "p60": 4076.22
+   }
+  },
+  {
+   "time_utc": "2026-10-23T13:45+00:00",
+   "events": [
+    {
+     "title": "Flash Manufacturing PMI",
+     "family": "activity",
+     "sign": -1,
+     "forecast": "55.4",
+     "previous": "57.0",
+     "actual": null
+    },
+    {
+     "title": "Flash Services PMI",
+     "family": "activity",
+     "sign": -1,
+     "forecast": "57.9",
+     "previous": "58.7",
+     "actual": null
+    }
+   ],
+   "gold": {
+    "p0": 4023.96
    }
   }
  ]
