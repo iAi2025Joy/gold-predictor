@@ -1,12 +1,12 @@
 {
-  "updated_at": "2026-10-24T18:23:17.162376+00:00",
+  "updated_at": "2026-10-24T18:39:17.170437+00:00",
   "coverage_target": 0.7,
   "assets": {
     "gold": {
       "status": "stale",
       "data_as_of": "2026-10-23T21:00:00+00:00",
       "base_price": 4007.89990234375,
-      "data_age_minutes": 1283.3,
+      "data_age_minutes": 1299.3,
       "ranges": {},
       "note": "Market data is more than 40 minutes old (market closed or feed delayed); ranges not issued."
     },
@@ -14,7 +14,7 @@
       "status": "stale",
       "data_as_of": "2026-10-23T21:00:00+00:00",
       "base_price": 103.2699966430664,
-      "data_age_minutes": 1283.3,
+      "data_age_minutes": 1299.3,
       "ranges": {},
       "note": "Market data is more than 40 minutes old (market closed or feed delayed); ranges not issued."
     }
@@ -22,16 +22,6 @@
   "method_note": "Calibrated price ranges, NOT direction forecasts: direction cannot be predicted better than chance (strict walk-forward studies). Each range says where the price is likely to be at the horizon; live_coverage is how often real prices actually landed inside these ranges.",
   "data_note": "Based on Yahoo Finance futures 5-minute bars (GC=F, CL=F), which can be delayed several minutes; because the newest price is already several minutes old, each range covers the delay PLUS the horizon (see spans_minutes_of_movement) so that it is honest about 'minutes from now'.",
   "self_calibration_log": [
-    {
-      "time": "2026-10-24T07:37+00:00",
-      "asset": "gold",
-      "horizon": "60min",
-      "band": "adj70",
-      "measured_hit_rate": 0.767,
-      "n": 300,
-      "adjustment_before": -0.0246,
-      "adjustment_after": -0.0579
-    },
     {
       "time": "2026-10-24T11:39+00:00",
       "asset": "oil",
@@ -71,6 +61,16 @@
       "n": 300,
       "adjustment_before": -0.0448,
       "adjustment_after": -0.06
+    },
+    {
+      "time": "2026-10-24T18:39+00:00",
+      "asset": "oil",
+      "horizon": "60min",
+      "band": "adj90",
+      "measured_hit_rate": 0.933,
+      "n": 300,
+      "adjustment_before": -0.0385,
+      "adjustment_after": -0.0552
     }
   ]
 }
