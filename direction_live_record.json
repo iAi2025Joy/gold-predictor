@@ -1,5 +1,5 @@
 {
- "updated_at": "2026-10-28T12:47:16+00:00",
+ "updated_at": "2026-10-28T12:59:50+00:00",
  "window": "last 1000 scored 10-minute calls",
  "how_to_read": "Each call is Up or Down for the next 10 minutes, scored against the real price 10 minutes later. 50% is a coin flip. Unchanged prices and market-closed periods are not counted.",
  "assets": {
@@ -99,10 +99,10 @@
    "horizons": {
     "20min": {
      "n_scored": 1000,
-     "n_correct": 542,
-     "accuracy": 0.542,
+     "n_correct": 543,
+     "accuracy": 0.543,
      "independent_calls": 500,
-     "baseline_majority_accuracy": 0.555,
+     "baseline_majority_accuracy": 0.556,
      "luck_margin_points": 4.4
     },
     "30min": {
@@ -110,7 +110,7 @@
      "n_correct": 519,
      "accuracy": 0.519,
      "independent_calls": 333,
-     "baseline_majority_accuracy": 0.546,
+     "baseline_majority_accuracy": 0.545,
      "luck_margin_points": 5.4
     },
     "60min": {
@@ -133,8 +133,8 @@
    "p_vs_coin_flip": 0.548,
    "share_of_calls_up": 0.592,
    "share_of_outcomes_up": 0.52,
-   "first_call": "2026-10-19T07:18:26+00:00",
-   "last_call": "2026-10-28T12:27:16+00:00",
+   "first_call": "2026-10-19T07:28:26+00:00",
+   "last_call": "2026-10-28T12:37:16+00:00",
    "baseline_majority_accuracy": 0.52,
    "statement": "Live direction record: 51% of the last 1000 ten-minute up/down calls were right (a coin flip is 50%; simply always guessing the more common direction would have scored 52%; with this many calls, normal luck is about +/-3 points). Rule check: 8 simple rules were tested side by side and none has beaten a coin flip with statistical confidence.",
    "learning": {
@@ -143,10 +143,10 @@
     "leaderboard": [
      {
       "rule": "news_fade",
-      "n": 149,
-      "accuracy": 0.5168,
+      "n": 148,
+      "accuracy": 0.5203,
       "recent_third_accuracy": 0.449,
-      "p_vs_coin_flip": 0.7433,
+      "p_vs_coin_flip": 0.6812,
       "p_vs_baseline_corrected": 1.0,
       "validated": false
      },
@@ -162,18 +162,18 @@
      {
       "rule": "momentum_15m",
       "n": 970,
-      "accuracy": 0.5062,
+      "accuracy": 0.5072,
       "recent_third_accuracy": 0.4861,
-      "p_vs_coin_flip": 0.724,
+      "p_vs_coin_flip": 0.6764,
       "p_vs_baseline_corrected": 1.0,
       "validated": false
      },
      {
       "rule": "momentum_60m",
       "n": 989,
-      "accuracy": 0.5056,
+      "accuracy": 0.5066,
       "recent_third_accuracy": 0.4985,
-      "p_vs_coin_flip": 0.7505,
+      "p_vs_coin_flip": 0.7028,
       "p_vs_baseline_corrected": 1.0,
       "validated": false
      },
@@ -189,27 +189,27 @@
      {
       "rule": "reversal_60m",
       "n": 989,
-      "accuracy": 0.4944,
+      "accuracy": 0.4934,
       "recent_third_accuracy": 0.5015,
-      "p_vs_coin_flip": 0.7505,
+      "p_vs_coin_flip": 0.7028,
       "p_vs_baseline_corrected": 1.0,
       "validated": false
      },
      {
       "rule": "reversal_15m",
       "n": 970,
-      "accuracy": 0.4938,
+      "accuracy": 0.4928,
       "recent_third_accuracy": 0.5139,
-      "p_vs_coin_flip": 0.724,
+      "p_vs_coin_flip": 0.6764,
       "p_vs_baseline_corrected": 1.0,
       "validated": false
      },
      {
       "rule": "news_follow",
-      "n": 149,
-      "accuracy": 0.4832,
+      "n": 148,
+      "accuracy": 0.4797,
       "recent_third_accuracy": 0.551,
-      "p_vs_coin_flip": 0.7433,
+      "p_vs_coin_flip": 0.6812,
       "p_vs_baseline_corrected": 1.0,
       "validated": false
      }
@@ -227,18 +227,18 @@
     },
     "30min": {
      "n_scored": 1000,
-     "n_correct": 476,
-     "accuracy": 0.476,
+     "n_correct": 477,
+     "accuracy": 0.477,
      "independent_calls": 333,
      "baseline_majority_accuracy": 0.562,
      "luck_margin_points": 5.4
     },
     "60min": {
      "n_scored": 1000,
-     "n_correct": 485,
-     "accuracy": 0.485,
+     "n_correct": 484,
+     "accuracy": 0.484,
      "independent_calls": 167,
-     "baseline_majority_accuracy": 0.56,
+     "baseline_majority_accuracy": 0.561,
      "luck_margin_points": 7.6
     }
    }
