@@ -1,5 +1,5 @@
 {
- "updated_at": "2026-10-29T12:24:54+00:00",
+ "updated_at": "2026-10-29T12:37:25+00:00",
  "actual_source": "Finnhub economic calendar refused (HTTP 403; likely a paid feature)",
  "rule": "gold direction = sign(actual - forecast) x fixed family sign (inflation/strength: down; unemployment/claims: up)",
  "analysis": {
@@ -18,7 +18,7 @@
     "n": 0
    }
   },
-  "n_releases_logged": 11,
+  "n_releases_logged": 12,
   "n_with_surprise": 0,
   "validated": [],
   "verdict": "Not validated yet: 0 releases with a known surprise (needs at least 20)."
@@ -307,6 +307,44 @@
     "p30": 4037.46,
     "p60": 4053.14
    }
+  },
+  {
+   "time_utc": "2026-10-29T12:30+00:00",
+   "events": [
+    {
+     "title": "Advance GDP q/q",
+     "family": "activity",
+     "sign": -1,
+     "forecast": "3.2%",
+     "previous": "1.5%",
+     "actual": null
+    },
+    {
+     "title": "Core PCE Price Index m/m",
+     "family": "inflation",
+     "sign": -1,
+     "forecast": "0.3%",
+     "previous": "0.2%",
+     "actual": null
+    },
+    {
+     "title": "Advance GDP Price Index q/q",
+     "family": "inflation",
+     "sign": -1,
+     "forecast": "3.2%",
+     "previous": "6.2%",
+     "actual": null
+    },
+    {
+     "title": "Unemployment Claims",
+     "family": "jobs_weakness",
+     "sign": 1,
+     "forecast": "198K",
+     "previous": "194K",
+     "actual": null
+    }
+   ],
+   "gold": {}
   }
  ]
 }
