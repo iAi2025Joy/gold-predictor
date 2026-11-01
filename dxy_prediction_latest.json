@@ -1,10 +1,10 @@
 {
   "prediction": "down",
-  "prediction_probability_up": 0.09615582000393237,
+  "prediction_probability_up": 0.08231449608509067,
   "confidence_note": "Not enough held-out test data yet to evaluate this model's real accuracy (need at least 20 test rows). Present any direction call as unproven, not confident.",
   "model_type_used": "logistic_regression",
   "current_dxy": 121.3202,
-  "predicted_dxy": 121.2619277233379,
+  "predicted_dxy": 121.24925449298242,
   "price_model_type_used": "linear_regression",
   "price_direction_vs_current": "lower",
   "direction_price_agreement": true,
@@ -42,7 +42,7 @@
     "methodology_note": "This is an APPROXIMATION using the 2-Year Treasury yield vs. the current Fed funds midpoint -- a real, legitimate technique, but a rough directional signal over a ~2-year horizon, NOT precise per-meeting market-implied probability (which would require a paid data source like CME FedWatch that this system does not have access to). Never present this as if it were exact market odds -- frame it as 'bond market pricing broadly suggests', not as a specific probability."
   },
   "fed_rate_outlook_note": "fed_rate_outlook contains the Fed's OWN published median rate projections (the 'dot plot' from their Summary of Economic Projections), NOT market-implied probability. market_rate_expectation_proxy is a SEPARATE, rough approximation of market pricing using 2yr Treasury yields -- see its own methodology_note field. Always attribute each correctly.",
-  "latest_macro_news_sentiment_score": 0.7302505578672627,
+  "latest_macro_news_sentiment_score": 0.7224910234163463,
   "news_sentiment_note": "This reuses the same macro/Fed-relevant news sentiment score computed for the gold model, not a DXY-exclusive filter.",
   "latest_real_yield_10y_pct": 2.63,
   "latest_vix": 17.2,
@@ -53,12 +53,12 @@
   "recency_weighting_half_life_days": 30,
   "data_source_note": "Tracks DTWEXBGS (FRED's Trade-Weighted Broad Dollar Index), a free, reputable dollar-strength benchmark -- not the identical series to the licensed ICE 'DXY' futures ticker some platforms show, though the two move very closely together.",
   "historical_data_start_date": "2026-07-28",
-  "historical_data_end_date": "2026-10-31",
-  "updated_at": "2026-10-31T21:56:07.561500+00:00",
-  "data_points_used": 96,
-  "rolling_predictions_tracked": 58,
+  "historical_data_end_date": "2026-11-01",
+  "updated_at": "2026-11-01T06:53:58.013439+00:00",
+  "data_points_used": 97,
+  "rolling_predictions_tracked": 59,
   "rolling_direction_accuracy": 1.0,
-  "rolling_price_mae": 0.24022069017478767,
+  "rolling_price_mae": 0.2371368187593183,
   "rolling_accuracy_is_significant": true,
-  "rolling_accuracy_note": "Over the last 58 resolved live predictions, correct 58 times (100.0%). Statistically distinguishable from a coin flip."
+  "rolling_accuracy_note": "Over the last 59 resolved live predictions, correct 59 times (100.0%). Statistically distinguishable from a coin flip."
 }
