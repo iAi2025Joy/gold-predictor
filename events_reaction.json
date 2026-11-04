@@ -1,5 +1,5 @@
 {
- "updated_at": "2026-11-04T14:56:13+00:00",
+ "updated_at": "2026-11-04T15:06:14+00:00",
  "actual_source": "Finnhub economic calendar refused (HTTP 403; likely a paid feature)",
  "rule": "gold direction = sign(actual - forecast) x fixed family sign (inflation/strength: down; unemployment/claims: up)",
  "analysis": {
@@ -18,7 +18,7 @@
     "n": 0
    }
   },
-  "n_releases_logged": 23,
+  "n_releases_logged": 24,
   "n_with_surprise": 0,
   "validated": [],
   "verdict": "Not validated yet: 0 releases with a known surprise (needs at least 20)."
@@ -602,6 +602,22 @@
     "p20": 3926.75,
     "p30": 3935.26,
     "p60": 3936.45
+   }
+  },
+  {
+   "time_utc": "2026-11-04T15:00+00:00",
+   "events": [
+    {
+     "title": "ISM Services PMI",
+     "family": "activity",
+     "sign": -1,
+     "forecast": "54.8",
+     "previous": "54.9",
+     "actual": null
+    }
+   ],
+   "gold": {
+    "p0": 4037.05
    }
   }
  ]
