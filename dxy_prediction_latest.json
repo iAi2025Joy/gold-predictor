@@ -1,10 +1,10 @@
 {
   "prediction": "down",
-  "prediction_probability_up": 0.0066204708765944115,
+  "prediction_probability_up": 0.006624351775073011,
   "confidence_note": "Not enough held-out test data yet to evaluate this model's real accuracy (need at least 20 test rows). Present any direction call as unproven, not confident.",
   "model_type_used": "logistic_regression",
   "current_dxy": 121.8803,
-  "predicted_dxy": 121.22034045277854,
+  "predicted_dxy": 121.21990257718835,
   "price_model_type_used": "linear_regression",
   "price_direction_vs_current": "lower",
   "direction_price_agreement": true,
@@ -42,7 +42,7 @@
     "methodology_note": "This is an APPROXIMATION using the 2-Year Treasury yield vs. the current Fed funds midpoint -- a real, legitimate technique, but a rough directional signal over a ~2-year horizon, NOT precise per-meeting market-implied probability (which would require a paid data source like CME FedWatch that this system does not have access to). Never present this as if it were exact market odds -- frame it as 'bond market pricing broadly suggests', not as a specific probability."
   },
   "fed_rate_outlook_note": "fed_rate_outlook contains the Fed's OWN published median rate projections (the 'dot plot' from their Summary of Economic Projections), NOT market-implied probability. market_rate_expectation_proxy is a SEPARATE, rough approximation of market pricing using 2yr Treasury yields -- see its own methodology_note field. Always attribute each correctly.",
-  "latest_macro_news_sentiment_score": 0.5770684114512135,
+  "latest_macro_news_sentiment_score": 0.5823665023366982,
   "news_sentiment_note": "This reuses the same macro/Fed-relevant news sentiment score computed for the gold model, not a DXY-exclusive filter.",
   "latest_real_yield_10y_pct": 2.63,
   "latest_vix": 25.64,
@@ -54,11 +54,11 @@
   "data_source_note": "Tracks DTWEXBGS (FRED's Trade-Weighted Broad Dollar Index), a free, reputable dollar-strength benchmark -- not the identical series to the licensed ICE 'DXY' futures ticker some platforms show, though the two move very closely together.",
   "historical_data_start_date": "2026-07-28",
   "historical_data_end_date": "2026-11-10",
-  "updated_at": "2026-11-10T07:48:07.485523+00:00",
+  "updated_at": "2026-11-10T20:02:11.699390+00:00",
   "data_points_used": 106,
-  "rolling_predictions_tracked": 79,
-  "rolling_direction_accuracy": 0.9746835443037974,
-  "rolling_price_mae": 0.3172116327712153,
+  "rolling_predictions_tracked": 80,
+  "rolling_direction_accuracy": 0.975,
+  "rolling_price_mae": 0.32149598170184335,
   "rolling_accuracy_is_significant": true,
-  "rolling_accuracy_note": "Over the last 79 resolved live predictions, correct 77 times (97.5%). Statistically distinguishable from a coin flip."
+  "rolling_accuracy_note": "Over the last 80 resolved live predictions, correct 78 times (97.5%). Statistically distinguishable from a coin flip."
 }
