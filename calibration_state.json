@@ -2,8 +2,8 @@
  "adj": {
   "oil": {
    "10min": {
-    "adj70": -0.0415,
-    "adj90": -0.0233
+    "adj70": -0.06,
+    "adj90": -0.0383
    },
    "30min": {
     "adj70": -0.045,
@@ -32,13 +32,13 @@
     "adj90": -0.0183
    },
    "10min": {
-    "adj70": -0.0183,
+    "adj70": 0.0034,
     "adj90": -0.015
    }
   }
  },
  "last_update": {
-  "oil|10|hit": "2026-11-11T06:08:16.388718+00:00",
+  "oil|10|hit": "2026-11-11T12:15:33.652587+00:00",
   "gold|30|hit": "2026-11-10T01:53:00.712175+00:00",
   "gold|20|hit90": "2026-11-03T09:08:46.681017+00:00",
   "gold|60|hit": "2026-11-10T03:11:36.028124+00:00",
@@ -48,44 +48,14 @@
   "oil|20|hit90": "2026-11-11T07:21:16.800425+00:00",
   "gold|20|hit": "2026-11-11T08:29:44.478799+00:00",
   "oil|20|hit": "2026-11-11T07:00:46.433926+00:00",
-  "oil|10|hit90": "2026-11-11T06:08:16.388718+00:00",
+  "oil|10|hit90": "2026-11-11T12:15:33.652587+00:00",
   "oil|30|hit": "2026-11-11T00:16:45.811251+00:00",
   "gold|10|hit90": "2026-11-11T04:06:58.763357+00:00",
   "gold|30|hit90": "2026-11-09T00:31:17.068553+00:00",
   "gold|60|hit90": "2026-11-11T06:44:46.451639+00:00",
-  "gold|10|hit": "2026-11-06T08:26:19.130370+00:00"
+  "gold|10|hit": "2026-11-11T12:15:33.652587+00:00"
  },
  "log": [
-  {
-   "time": "2026-11-06T08:58+00:00",
-   "asset": "oil",
-   "horizon": "10min",
-   "band": "adj90",
-   "measured_hit_rate": 0.867,
-   "n": 300,
-   "adjustment_before": 0.0117,
-   "adjustment_after": 0.0284
-  },
-  {
-   "time": "2026-11-06T10:06+00:00",
-   "asset": "oil",
-   "horizon": "30min",
-   "band": "adj90",
-   "measured_hit_rate": 0.86,
-   "n": 300,
-   "adjustment_before": 0.005,
-   "adjustment_after": 0.025
-  },
-  {
-   "time": "2026-11-06T10:27+00:00",
-   "asset": "oil",
-   "horizon": "10min",
-   "band": "adj70",
-   "measured_hit_rate": 0.657,
-   "n": 300,
-   "adjustment_before": 0.0101,
-   "adjustment_after": 0.0318
-  },
   {
    "time": "2026-11-06T10:27+00:00",
    "asset": "oil",
@@ -555,6 +525,36 @@
    "n": 300,
    "adjustment_before": 0.0483,
    "adjustment_after": 0.0333
+  },
+  {
+   "time": "2026-11-11T12:15+00:00",
+   "asset": "gold",
+   "horizon": "10min",
+   "band": "adj70",
+   "measured_hit_rate": 0.657,
+   "n": 300,
+   "adjustment_before": -0.0183,
+   "adjustment_after": 0.0034
+  },
+  {
+   "time": "2026-11-11T12:15+00:00",
+   "asset": "oil",
+   "horizon": "10min",
+   "band": "adj70",
+   "measured_hit_rate": 0.747,
+   "n": 300,
+   "adjustment_before": -0.0415,
+   "adjustment_after": -0.06
+  },
+  {
+   "time": "2026-11-11T12:15+00:00",
+   "asset": "oil",
+   "horizon": "10min",
+   "band": "adj90",
+   "measured_hit_rate": 0.93,
+   "n": 300,
+   "adjustment_before": -0.0233,
+   "adjustment_after": -0.0383
   }
  ]
 }
