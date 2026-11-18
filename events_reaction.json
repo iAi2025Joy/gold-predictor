@@ -1,5 +1,5 @@
 {
- "updated_at": "2026-11-18T06:53:29+00:00",
+ "updated_at": "2026-11-18T07:03:29+00:00",
  "actual_source": "Finnhub economic calendar refused (HTTP 403; likely a paid feature)",
  "rule": "gold direction = sign(actual - forecast) x fixed family sign (inflation/strength: down; unemployment/claims: up)",
  "analysis": {
@@ -18,7 +18,7 @@
     "n": 0
    }
   },
-  "n_releases_logged": 37,
+  "n_releases_logged": 38,
   "n_with_surprise": 0,
   "validated": [],
   "verdict": "Not validated yet: 0 releases with a known surprise (needs at least 20)."
@@ -954,6 +954,22 @@
     "p20": 3848.71,
     "p30": 3849.68,
     "p60": 3863.29
+   }
+  },
+  {
+   "time_utc": "2026-11-18T07:00+00:00",
+   "events": [
+    {
+     "title": "CPI y/y",
+     "family": "inflation",
+     "sign": -1,
+     "forecast": "3.6%",
+     "previous": "3.5%",
+     "actual": null
+    }
+   ],
+   "gold": {
+    "p0": 3777.4
    }
   }
  ]
