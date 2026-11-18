@@ -1,126 +1,22 @@
 {
-  "updated_at": "2026-11-18T22:40:16.471315+00:00",
+  "updated_at": "2026-11-18T22:51:12.145504+00:00",
   "coverage_target": 0.7,
   "assets": {
     "gold": {
       "status": "stale",
       "data_as_of": "2026-11-18T22:00:00+00:00",
       "base_price": 3727.800048828125,
-      "data_age_minutes": 40.3,
+      "data_age_minutes": 51.2,
       "ranges": {},
       "note": "Market data is more than 40 minutes old (market closed or feed delayed); ranges not issued."
     },
     "oil": {
-      "status": "ok",
+      "status": "stale",
       "data_as_of": "2026-11-18T22:05:00+00:00",
       "base_price": 81.88999938964844,
-      "data_age_minutes": 35.3,
-      "ranges": {
-        "10min": {
-          "range_low": 81.3892,
-          "range_high": 82.1535,
-          "range_low90": 81.1948,
-          "range_high90": 82.2532,
-          "live_coverage90": 0.9267,
-          "live_n90": 300,
-          "live_note90": "92.7% of the last 300 ranges contained the real price (target 90%). Consistent with target.",
-          "horizon_from_now_min": 10,
-          "spans_minutes_of_movement": 50,
-          "chance_higher": 0.386,
-          "chance_lower": 0.614,
-          "valid_at": "2026-11-18T22:55:00+00:00",
-          "widened_for": null,
-          "self_calibration": {
-            "adj70": 0.0183,
-            "adj90": -0.06
-          },
-          "method": "same_session",
-          "live_coverage": 0.7533,
-          "live_n": 300,
-          "live_note": "75.3% of the last 300 ranges contained the real price (target 70%). Consistent with target.",
-          "stay_above_low_rate": 0.8533,
-          "stay_below_high_rate": 0.9,
-          "one_sided_n": 300
-        },
-        "20min": {
-          "range_low": 81.3268,
-          "range_high": 82.1221,
-          "range_low90": 81.1305,
-          "range_high90": 82.2275,
-          "live_coverage90": 0.86,
-          "live_n90": 300,
-          "live_note90": "86.0% of the last 300 ranges contained the real price (target 90%). Consistent with target.",
-          "horizon_from_now_min": 20,
-          "spans_minutes_of_movement": 60,
-          "chance_higher": 0.369,
-          "chance_lower": 0.631,
-          "valid_at": "2026-11-18T23:05:00+00:00",
-          "widened_for": null,
-          "self_calibration": {
-            "adj70": -0.0283,
-            "adj90": -0.06
-          },
-          "method": "same_session",
-          "live_coverage": 0.72,
-          "live_n": 300,
-          "live_note": "72.0% of the last 300 ranges contained the real price (target 70%). Consistent with target.",
-          "stay_above_low_rate": 0.8267,
-          "stay_below_high_rate": 0.8933,
-          "one_sided_n": 300
-        },
-        "30min": {
-          "range_low": 81.2314,
-          "range_high": 82.1405,
-          "range_low90": 81.0574,
-          "range_high90": 82.217,
-          "live_coverage90": 0.89,
-          "live_n90": 300,
-          "live_note90": "89.0% of the last 300 ranges contained the real price (target 90%). Consistent with target.",
-          "horizon_from_now_min": 30,
-          "spans_minutes_of_movement": 70,
-          "chance_higher": 0.348,
-          "chance_lower": 0.652,
-          "valid_at": "2026-11-18T23:15:00+00:00",
-          "widened_for": null,
-          "self_calibration": {
-            "adj70": 0.0251,
-            "adj90": -0.06
-          },
-          "method": "same_session",
-          "live_coverage": 0.73,
-          "live_n": 300,
-          "live_note": "73.0% of the last 300 ranges contained the real price (target 70%). Consistent with target.",
-          "stay_above_low_rate": 0.82,
-          "stay_below_high_rate": 0.91,
-          "one_sided_n": 300
-        },
-        "60min": {
-          "range_low": 81.1481,
-          "range_high": 82.0341,
-          "range_low90": 80.9271,
-          "range_high90": 82.1676,
-          "live_coverage90": 0.87,
-          "live_n90": 300,
-          "live_note90": "87.0% of the last 300 ranges contained the real price (target 90%). Consistent with target.",
-          "horizon_from_now_min": 60,
-          "spans_minutes_of_movement": 100,
-          "chance_higher": 0.283,
-          "chance_lower": 0.717,
-          "valid_at": "2026-11-18T23:45:00+00:00",
-          "widened_for": null,
-          "self_calibration": {
-            "adj70": -0.06,
-            "adj90": -0.06
-          },
-          "method": "same_session",
-          "live_coverage": 0.71,
-          "live_n": 300,
-          "live_note": "71.0% of the last 300 ranges contained the real price (target 70%). Consistent with target.",
-          "stay_above_low_rate": 0.8167,
-          "stay_below_high_rate": 0.8933,
-          "one_sided_n": 300
-        }
-      }
+      "data_age_minutes": 46.2,
+      "ranges": {},
+      "note": "Market data is more than 40 minutes old (market closed or feed delayed); ranges not issued."
     }
   },
   "method_note": "Calibrated price ranges, NOT direction forecasts: direction cannot be predicted better than chance (strict walk-forward studies). Each range says where the price is likely to be at the horizon; live_coverage is how often real prices actually landed inside these ranges.",
