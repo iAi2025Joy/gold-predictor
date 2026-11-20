@@ -1,5 +1,5 @@
 {
- "updated_at": "2026-11-20T14:53:14+00:00",
+ "updated_at": "2026-11-20T15:03:14+00:00",
  "actual_source": "Finnhub economic calendar refused (HTTP 403; likely a paid feature)",
  "rule": "gold direction = sign(actual - forecast) x fixed family sign (inflation/strength: down; unemployment/claims: up)",
  "analysis": {
@@ -18,7 +18,7 @@
     "n": 0
    }
   },
-  "n_releases_logged": 41,
+  "n_releases_logged": 42,
   "n_with_surprise": 0,
   "validated": [],
   "verdict": "Not validated yet: 0 releases with a known surprise (needs at least 20)."
@@ -1042,6 +1042,30 @@
     "p20": 3715.02,
     "p30": 3715.99,
     "p60": 3706.59
+   }
+  },
+  {
+   "time_utc": "2026-11-20T15:00+00:00",
+   "events": [
+    {
+     "title": "Revised UoM Consumer Sentiment",
+     "family": null,
+     "sign": 0,
+     "forecast": "51.7",
+     "previous": "51.0",
+     "actual": null
+    },
+    {
+     "title": "Revised UoM Inflation Expectations",
+     "family": "inflation",
+     "sign": -1,
+     "forecast": null,
+     "previous": "4.3%",
+     "actual": null
+    }
+   ],
+   "gold": {
+    "p0": 3575.7
    }
   }
  ]
