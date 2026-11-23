@@ -32,7 +32,7 @@
     "adj90": 0.005
    },
    "10min": {
-    "adj70": 0.0133,
+    "adj70": -0.0234,
     "adj90": 0.0033
    }
   }
@@ -53,19 +53,9 @@
   "gold|10|hit90": "2026-11-23T17:30:33.821839+00:00",
   "gold|30|hit90": "2026-11-23T14:00:38.908962+00:00",
   "gold|60|hit90": "2026-11-23T12:36:10.332375+00:00",
-  "gold|10|hit": "2026-11-23T11:59:41.760212+00:00"
+  "gold|10|hit": "2026-11-23T18:07:00.962409+00:00"
  },
  "log": [
-  {
-   "time": "2026-11-19T13:32+00:00",
-   "asset": "oil",
-   "horizon": "20min",
-   "band": "adj90",
-   "measured_hit_rate": 0.847,
-   "n": 300,
-   "adjustment_before": -0.0166,
-   "adjustment_after": 0.0101
-  },
   {
    "time": "2026-11-19T14:25+00:00",
    "asset": "gold",
@@ -555,6 +545,16 @@
    "n": 300,
    "adjustment_before": 0.025,
    "adjustment_after": 0.0033
+  },
+  {
+   "time": "2026-11-23T18:07+00:00",
+   "asset": "gold",
+   "horizon": "10min",
+   "band": "adj70",
+   "measured_hit_rate": 0.773,
+   "n": 300,
+   "adjustment_before": 0.0133,
+   "adjustment_after": -0.0234
   }
  ]
 }
