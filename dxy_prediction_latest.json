@@ -1,10 +1,10 @@
 {
   "prediction": "down",
-  "prediction_probability_up": 0.07580272094108334,
+  "prediction_probability_up": 0.059789627916345484,
   "confidence_note": "This model (logistic regression, chosen because it scored best on real held-out test data) had backtested accuracy (90.0%) that was not statistically distinguishable from simply always predicting the majority class (90.0%) -- McNemar's test. Treat this prediction as having no reliable edge beyond the obvious baseline.",
   "model_type_used": "logistic_regression",
   "current_dxy": 122.6503,
-  "predicted_dxy": 122.4572551142128,
+  "predicted_dxy": 122.60789908680421,
   "price_model_type_used": "linear_regression",
   "price_direction_vs_current": "lower",
   "direction_price_agreement": true,
@@ -45,7 +45,7 @@
     "methodology_note": "This is an APPROXIMATION using the 2-Year Treasury yield vs. the current Fed funds midpoint -- a real, legitimate technique, but a rough directional signal over a ~2-year horizon, NOT precise per-meeting market-implied probability (which would require a paid data source like CME FedWatch that this system does not have access to). Never present this as if it were exact market odds -- frame it as 'bond market pricing broadly suggests', not as a specific probability."
   },
   "fed_rate_outlook_note": "fed_rate_outlook contains the Fed's OWN published median rate projections (the 'dot plot' from their Summary of Economic Projections), NOT market-implied probability. market_rate_expectation_proxy is a SEPARATE, rough approximation of market pricing using 2yr Treasury yields -- see its own methodology_note field. Always attribute each correctly.",
-  "latest_macro_news_sentiment_score": -0.9249353036567121,
+  "latest_macro_news_sentiment_score": -0.5760199644141535,
   "news_sentiment_note": "This reuses the same macro/Fed-relevant news sentiment score computed for the gold model, not a DXY-exclusive filter.",
   "latest_real_yield_10y_pct": 2.88,
   "latest_vix": 28.44,
@@ -56,12 +56,12 @@
   "recency_weighting_half_life_days": 30,
   "data_source_note": "Tracks DTWEXBGS (FRED's Trade-Weighted Broad Dollar Index), a free, reputable dollar-strength benchmark -- not the identical series to the licensed ICE 'DXY' futures ticker some platforms show, though the two move very closely together.",
   "historical_data_start_date": "2026-07-28",
-  "historical_data_end_date": "2026-11-22",
-  "updated_at": "2026-11-22T19:59:36.612017+00:00",
-  "data_points_used": 118,
+  "historical_data_end_date": "2026-11-23",
+  "updated_at": "2026-11-23T08:19:40.579014+00:00",
+  "data_points_used": 119,
   "rolling_predictions_tracked": 100,
   "rolling_direction_accuracy": 0.97,
-  "rolling_price_mae": 0.29623349998814036,
+  "rolling_price_mae": 0.2922477625316309,
   "rolling_accuracy_is_significant": true,
   "rolling_accuracy_note": "Over the last 100 resolved live predictions, correct 97 times (97.0%). Statistically distinguishable from a coin flip."
 }
