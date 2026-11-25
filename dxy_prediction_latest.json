@@ -1,18 +1,18 @@
 {
   "prediction": "down",
-  "prediction_probability_up": 0.026326965203681958,
-  "confidence_note": "This model (logistic regression, chosen because it scored best on real held-out test data) had backtested accuracy (85.0%) that was not statistically distinguishable from simply always predicting the majority class (85.0%) -- McNemar's test. Treat this prediction as having no reliable edge beyond the obvious baseline.",
+  "prediction_probability_up": 0.03277416277524943,
+  "confidence_note": "This model (logistic regression, chosen because it scored best on real held-out test data) had backtested accuracy (85.7%) that was not statistically distinguishable from simply always predicting the majority class (85.7%) -- McNemar's test. Treat this prediction as having no reliable edge beyond the obvious baseline.",
   "model_type_used": "logistic_regression",
   "current_dxy": 123.5978,
-  "predicted_dxy": 123.41048485266761,
+  "predicted_dxy": 123.39645661321319,
   "price_model_type_used": "linear_regression",
   "price_direction_vs_current": "lower",
   "direction_price_agreement": true,
   "price_confidence_note": "This forecast (linear regression) had error that was NOT statistically better than simply assuming the index stays the same (Wilcoxon signed-rank test).",
   "is_price_prediction_significant": false,
   "model_accuracy_vs_baseline": {
-    "model": 0.85,
-    "baseline": 0.85
+    "model": 0.8571428571428571,
+    "baseline": 0.8571428571428571
   },
   "is_statistically_significant": false,
   "current_fed_funds_rate_lower_pct": 3.75,
@@ -45,7 +45,7 @@
     "methodology_note": "This is an APPROXIMATION using the 2-Year Treasury yield vs. the current Fed funds midpoint -- a real, legitimate technique, but a rough directional signal over a ~2-year horizon, NOT precise per-meeting market-implied probability (which would require a paid data source like CME FedWatch that this system does not have access to). Never present this as if it were exact market odds -- frame it as 'bond market pricing broadly suggests', not as a specific probability."
   },
   "fed_rate_outlook_note": "fed_rate_outlook contains the Fed's OWN published median rate projections (the 'dot plot' from their Summary of Economic Projections), NOT market-implied probability. market_rate_expectation_proxy is a SEPARATE, rough approximation of market pricing using 2yr Treasury yields -- see its own methodology_note field. Always attribute each correctly.",
-  "latest_macro_news_sentiment_score": -0.21321675371561305,
+  "latest_macro_news_sentiment_score": 0.3996055686999517,
   "news_sentiment_note": "This reuses the same macro/Fed-relevant news sentiment score computed for the gold model, not a DXY-exclusive filter.",
   "latest_real_yield_10y_pct": 2.79,
   "latest_vix": 26.62,
@@ -56,12 +56,12 @@
   "recency_weighting_half_life_days": 30,
   "data_source_note": "Tracks DTWEXBGS (FRED's Trade-Weighted Broad Dollar Index), a free, reputable dollar-strength benchmark -- not the identical series to the licensed ICE 'DXY' futures ticker some platforms show, though the two move very closely together.",
   "historical_data_start_date": "2026-07-28",
-  "historical_data_end_date": "2026-11-24",
-  "updated_at": "2026-11-24T22:47:20.436012+00:00",
-  "data_points_used": 120,
+  "historical_data_end_date": "2026-11-25",
+  "updated_at": "2026-11-25T09:16:01.370440+00:00",
+  "data_points_used": 121,
   "rolling_predictions_tracked": 100,
   "rolling_direction_accuracy": 0.96,
-  "rolling_price_mae": 0.29175436683708855,
+  "rolling_price_mae": 0.2915155833289583,
   "rolling_accuracy_is_significant": true,
   "rolling_accuracy_note": "Over the last 100 resolved live predictions, correct 96 times (96.0%). Statistically distinguishable from a coin flip."
 }
